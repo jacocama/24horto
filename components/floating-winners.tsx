@@ -54,7 +54,7 @@ export function FloatingWinners() {
   return (
     <div
       aria-hidden="true"
-      className="pointer-events-none absolute inset-0 z-0 flex flex-col justify-between overflow-hidden py-6"
+      className="pointer-events-none absolute inset-0 z-0 flex flex-col items-start justify-between overflow-hidden py-6"
     >
       {items.map((it) => (
         <div
