@@ -1,0 +1,117 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Phase {
+  UPPER_R1
+  UPPER_R2
+  UPPER_R3
+  UPPER_R4
+  UPPER_FINAL
+  LOWER_R1
+  LOWER_R2
+  LOWER_R3
+  LOWER_R4
+  LOWER_R5
+  LOWER_FINAL
+  GRAND_FINAL
+}
+
+enum MatchStatus {
+  SCHEDULED
+  LIVE
+  FINISHED
+}
+
+model Edition {
+  id        String   @id @default(cuid())
+  year      Int      @unique
+  name      String?
+  isCurrent Boolean  @default(false)
+  teams     Team[]
+  matches   Match[]
+  createdAt DateTime @default(now())
+}
+
+model Team {
+  id          String   @id @default(cuid())
+  edition     Edition  @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  editionId   String
+  name        String
+  seed        Int
+  eliminated  Boolean  @default(false)
+  players     Player[]
+  homeMatches Match[]  @relation("home")
+  awayMatches Match[]  @relation("away")
+  goals       Goal[]
+  createdAt   DateTime @default(now())
+
+  @@unique([editionId, seed])
+  @@unique([editionId, name])
+  @@index([editionId])
+}
+
+model Player {
+  id       String  @id @default(cuid())
+  team     Team    @relation(fields: [teamId], references: [id], onDelete: Cascade)
+  teamId   String
+  name     String
+  isCoach  Boolean @default(false)
+  goals    Goal[]
+  mvpFor   Match[] @relation("mvp")
+
+  @@index([teamId])
+}
+
+model Match {
+  id              String      @id @default(cuid())
+  edition         Edition     @relation(fields: [editionId], references: [id], onDelete: Cascade)
+  editionId       String
+  code            String
+  phase           Phase
+  scheduledAt     DateTime
+  status          MatchStatus @default(SCHEDULED)
+  homeTeam        Team?       @relation("home", fields: [homeTeamId], references: [id])
+  homeTeamId      String?
+  awayTeam        Team?       @relation("away", fields: [awayTeamId], references: [id])
+  awayTeamId      String?
+  homeScore       Int         @default(0)
+  awayScore       Int         @default(0)
+  startedAt       DateTime?
+  penaltyWinnerId String?
+  mvp             Player?     @relation("mvp", fields: [mvpId], references: [id])
+  mvpId           String?
+  winnerNext      String?
+  loserNext       String?
+  goals           Goal[]
+  updatedAt       DateTime    @updatedAt
+
+  @@unique([editionId, code])
+  @@index([editionId, phase, scheduledAt])
+}
+
+model Goal {
+  id        String   @id @default(cuid())
+  match     Match    @relation(fields: [matchId], references: [id], onDelete: Cascade)
+  matchId   String
+  team      Team     @relation(fields: [teamId], references: [id])
+  teamId    String
+  player    Player?  @relation(fields: [playerId], references: [id])
+  playerId  String?
+  minute    Int      @default(0)
+  createdAt DateTime @default(now())
+
+  @@index([matchId])
+}
+
+model AdminUser {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  createdAt    DateTime @default(now())
+}
