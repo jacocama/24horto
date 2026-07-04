@@ -126,10 +126,9 @@ async function main() {
       where: { id: byPhase[Phase.INFERNO_R2][i].id },
       data: { winnerNext: byPhase[Phase.PLAYOFF_R16][i ^ 2].id },
     });
-    await prisma.match.update({
-      where: { id: byPhase[Phase.PLAYOFF_R16][i].id },
-      data: { winnerNext: byPhase[Phase.PLAYOFF_QF][Math.floor(i / 2)].id },
-    });
+    // R16 -> QF: NIENTE winnerNext.
+    // I quarti vengono sorteggiati manualmente dall'admin dopo che tutti
+    // gli ottavi sono conclusi, e le 8 squadre vengono abbinate a mano.
   }
   // SF pairing (cross bracket, come da tabellone ufficiale):
   //   SF[0] = QF[0] winner vs QF[3] winner
