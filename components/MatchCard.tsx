@@ -17,11 +17,12 @@ export type MatchLike = {
   homeScore: number;
   awayScore: number;
   penaltyWinnerId?: string | null;
+  scoreUnknown?: boolean;
   goals?: GoalLite[];
   mvp?: MvpLite;
 };
 
-function TeamRow({ team, score, winner, showScore, pkBadge, scorers }: { team: Team; score: number; winner: boolean; showScore: boolean; pkBadge?: boolean; scorers?: GoalLite[] }) {
+function TeamRow({ team, score, winner, showScore, pkBadge, passBadge, scorers }: { team: Team; score: number; winner: boolean; showScore: boolean; pkBadge?: boolean; passBadge?: boolean; scorers?: GoalLite[] }) {
   return (
     <div className={`flex items-start justify-between gap-3 py-2 ${winner ? "text-white" : "text-white/80"}`}>
       <div className="flex items-start gap-2 min-w-0 flex-1">
@@ -53,6 +54,9 @@ function TeamRow({ team, score, winner, showScore, pkBadge, scorers }: { team: T
           {score}
         </span>
       )}
+      {passBadge && (
+        <span className="text-[10px] font-black uppercase tracking-wider text-accent">Passa</span>
+      )}
     </div>
   );
 }
@@ -60,10 +64,13 @@ function TeamRow({ team, score, winner, showScore, pkBadge, scorers }: { team: T
 export function MatchCard({ m, href }: { m: MatchLike; href?: string }) {
   const isLive = m.status === "LIVE";
   const isFinished = m.status === "FINISHED";
-  const hasScore = isLive || isFinished;
-  const draw = hasScore && m.homeScore === m.awayScore;
-  const homeWin = hasScore && (m.homeScore > m.awayScore || (draw && m.penaltyWinnerId === m.homeTeam?.id));
-  const awayWin = hasScore && (m.awayScore > m.homeScore || (draw && m.penaltyWinnerId === m.awayTeam?.id));
+  const hasScore = (isLive || isFinished) && !m.scoreUnknown;
+  const declared = isFinished && m.scoreUnknown && !!m.penaltyWinnerId;
+  const draw = (isLive || isFinished) && !m.scoreUnknown && m.homeScore === m.awayScore;
+  const homeWin = (hasScore && (m.homeScore > m.awayScore || (draw && m.penaltyWinnerId === m.homeTeam?.id)))
+    || (declared && m.penaltyWinnerId === m.homeTeam?.id);
+  const awayWin = (hasScore && (m.awayScore > m.homeScore || (draw && m.penaltyWinnerId === m.awayTeam?.id)))
+    || (declared && m.penaltyWinnerId === m.awayTeam?.id);
   const homePk = !!(draw && m.penaltyWinnerId && m.penaltyWinnerId === m.homeTeam?.id);
   const awayPk = !!(draw && m.penaltyWinnerId && m.penaltyWinnerId === m.awayTeam?.id);
 
@@ -74,15 +81,15 @@ export function MatchCard({ m, href }: { m: MatchLike; href?: string }) {
         {isLive ? (
           <span className="chip text-live"><span className="live-dot" /> LIVE</span>
         ) : isFinished ? (
-          <span className="chip text-white/70">Finita</span>
+          <span className="chip text-white/70">{declared ? "Passa il turno" : "Finita"}</span>
         ) : (
           <span className="text-white/60">{fmtDate(m.scheduledAt)} · {fmtTime(m.scheduledAt)}</span>
         )}
       </div>
       <div className="divide-y divide-white/5">
-        <TeamRow team={m.homeTeam} score={m.homeScore} winner={homeWin} showScore={hasScore} pkBadge={homePk}
+        <TeamRow team={m.homeTeam} score={m.homeScore} winner={homeWin} showScore={hasScore} pkBadge={homePk} passBadge={declared && homeWin}
           scorers={isFinished ? m.goals?.filter((g) => g.teamId === m.homeTeamId) : undefined} />
-        <TeamRow team={m.awayTeam} score={m.awayScore} winner={awayWin} showScore={hasScore} pkBadge={awayPk}
+        <TeamRow team={m.awayTeam} score={m.awayScore} winner={awayWin} showScore={hasScore} pkBadge={awayPk} passBadge={declared && awayWin}
           scorers={isFinished ? m.goals?.filter((g) => g.teamId === m.awayTeamId) : undefined} />
       </div>
       {!hasScore && (

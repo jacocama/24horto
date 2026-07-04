@@ -171,20 +171,31 @@ async function main() {
     }
   }
 
-  async function playMatch(matchId: string, homeName: string, awayName: string, winnerSide: 0 | 1): Promise<string> {
+  // Only the final has a real known score; all other matches are marked as "advance without score"
+  async function advanceMatch(matchId: string, homeName: string, awayName: string, winnerSide: 0 | 1): Promise<string> {
     const homeTeam = byName.get(homeName)!;
     const awayTeam = byName.get(awayName)!;
-    // scores: winner sempre >= loser, ~30% pareggio con rigori
-    const draw = Math.random() < 0.3;
-    let hs: number, as: number, penaltyWinnerId: string | null = null;
-    if (draw) {
-      hs = as = randInt(0, 3);
-      penaltyWinnerId = winnerSide === 0 ? homeTeam.id : awayTeam.id;
-    } else {
-      const w = randInt(1, 5);
-      const l = randInt(0, Math.max(0, w - 1));
-      if (winnerSide === 0) { hs = w; as = l; } else { hs = l; as = w; }
-    }
+    const winnerId = winnerSide === 0 ? homeTeam.id : awayTeam.id;
+    await prisma.match.update({
+      where: { id: matchId },
+      data: {
+        homeTeamId: homeTeam.id,
+        awayTeamId: awayTeam.id,
+        homeScore: 0,
+        awayScore: 0,
+        status: "FINISHED",
+        scoreUnknown: true,
+        penaltyWinnerId: winnerId,
+      },
+    });
+    return winnerId;
+  }
+
+  async function playFinalMatch(matchId: string, homeName: string, awayName: string, hs: number, as: number, winnerSide: 0 | 1): Promise<string> {
+    const homeTeam = byName.get(homeName)!;
+    const awayTeam = byName.get(awayName)!;
+    const draw = hs === as;
+    const penaltyWinnerId = draw ? (winnerSide === 0 ? homeTeam.id : awayTeam.id) : null;
     await prisma.match.update({
       where: { id: matchId },
       data: {
@@ -204,12 +215,10 @@ async function main() {
     for (let i = 0; i < as; i++) {
       await prisma.goal.create({ data: { matchId, teamId: awayTeam.id, playerId: rand(awayPlayers).id, minute: 0 } });
     }
-    const all = [...homePlayers, ...awayPlayers];
-    if (all.length) {
-      await prisma.match.update({ where: { id: matchId }, data: { mvpId: rand(all).id } });
-    }
     return winnerSide === 0 ? homeTeam.id : awayTeam.id;
   }
+  // Alias for backward-compat call sites
+  const playMatch = advanceMatch;
 
   // ------ PARADISO R1 ------
   const pr1WinnerNames: string[] = [];
@@ -285,10 +294,12 @@ async function main() {
     sfWinnerNames.push(SF_WINNER[i] === 0 ? home : away);
   }
 
-  // ------ FINALE ------
+  // ------ FINALE (unico match con risultato reale: BAR VENEZIA 1-0 AS ROMA) ------
   const finalHome = sfWinnerNames[0];
   const finalAway = sfWinnerNames[1];
-  await playMatch(byPhase[Phase.PLAYOFF_FINAL][0], finalHome, finalAway, FINAL_WINNER as 0 | 1);
+  const finalHomeScore = FINAL_WINNER === 0 ? 1 : 0;
+  const finalAwayScore = FINAL_WINNER === 0 ? 0 : 1;
+  await playFinalMatch(byPhase[Phase.PLAYOFF_FINAL][0], finalHome, finalAway, finalHomeScore, finalAwayScore, FINAL_WINNER as 0 | 1);
 
   const champion = FINAL_WINNER === 0 ? finalHome : finalAway;
   console.log(`🏆 Campione 2025: ${champion}`);

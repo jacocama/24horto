@@ -21,8 +21,12 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
   const home = m.goals.filter((g) => g.teamId === m.homeTeamId);
   const away = m.goals.filter((g) => g.teamId === m.awayTeamId);
 
-  const draw = m.status === "FINISHED" && m.homeScore === m.awayScore;
+  const isFinished = m.status === "FINISHED";
+  const draw = isFinished && !m.scoreUnknown && m.homeScore === m.awayScore;
   const pkWinner = draw && m.penaltyWinnerId
+    ? (m.penaltyWinnerId === m.homeTeamId ? m.homeTeam : m.awayTeam)
+    : null;
+  const passWinner = isFinished && m.scoreUnknown && m.penaltyWinnerId
     ? (m.penaltyWinnerId === m.homeTeamId ? m.homeTeam : m.awayTeam)
     : null;
 
@@ -33,6 +37,12 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
         <div className="card text-center text-sm">
           <span className="text-white/60">Vinto ai rigori da </span>
           <span className="font-bold text-accent">{pkWinner.name}</span>
+        </div>
+      )}
+      {passWinner && (
+        <div className="card text-center text-sm">
+          <span className="text-white/60">Passa il turno </span>
+          <span className="font-bold text-accent">{passWinner.name}</span>
         </div>
       )}
       {m.mvp && (

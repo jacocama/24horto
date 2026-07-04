@@ -19,10 +19,20 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     data.status = "SCHEDULED";
     data.startedAt = null;
     data.penaltyWinnerId = null;
+    data.scoreUnknown = false;
+    data.homeScore = 0;
+    data.awayScore = 0;
   } else if (body.action === "setPenaltyWinner") {
     data.penaltyWinnerId = body.teamId || null;
   } else if (body.action === "setMvp") {
     data.mvpId = body.playerId || null;
+  } else if (body.action === "advance") {
+    // Passaggio turno senza risultato: winner dichiarato manualmente
+    data.status = "FINISHED";
+    data.scoreUnknown = true;
+    data.homeScore = 0;
+    data.awayScore = 0;
+    data.penaltyWinnerId = body.teamId || null;
   } else {
     if (body.status) data.status = body.status;
     if (body.scheduledAt) data.scheduledAt = new Date(body.scheduledAt);
@@ -39,8 +49,9 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const drawNow = m.homeScore === m.awayScore;
   const justFinished = prev && prev.status !== "FINISHED" && m.status === "FINISHED";
   const penaltyJustSet = body.action === "setPenaltyWinner" && m.status === "FINISHED";
+  const advanceAction = body.action === "advance" && m.status === "FINISHED";
 
-  if ((justFinished && !drawNow) || penaltyJustSet) {
+  if ((justFinished && !drawNow) || penaltyJustSet || advanceAction) {
     await propagate(m.id);
   }
   return NextResponse.json(m);

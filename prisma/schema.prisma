@@ -80,6 +80,7 @@ model Match {
   awayScore       Int         @default(0)
   startedAt       DateTime?
   penaltyWinnerId String?
+  scoreUnknown    Boolean     @default(false)
   mvp             Player?     @relation("mvp", fields: [mvpId], references: [id])
   mvpId           String?
   winnerNext      String?

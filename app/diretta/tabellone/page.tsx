@@ -15,6 +15,7 @@ type Match = {
   homeScore: number;
   awayScore: number;
   penaltyWinnerId: string | null;
+  scoreUnknown: boolean;
   homeTeam: { id: string; name: string } | null;
   awayTeam: { id: string; name: string } | null;
 };
@@ -136,7 +137,7 @@ function BracketMatch({ m }: { m: Match }) {
           {homePk && <span className="ml-1 text-[9px] font-bold text-accent">dcr</span>}
         </span>
         <span className={`tabular-nums font-bold ${m.status === "LIVE" ? "text-red-400" : "text-white/80"}`}>
-          {m.status === "SCHEDULED" ? "vs" : `${m.homeScore}–${m.awayScore}`}
+          {m.status === "SCHEDULED" ? "vs" : m.scoreUnknown ? "→" : `${m.homeScore}–${m.awayScore}`}
         </span>
         <span className={`truncate text-right ${awayWin ? "font-black text-white" : "text-white/70"}`}>
           {awayPk && <span className="mr-1 text-[9px] font-bold text-accent">dcr</span>}
@@ -149,7 +150,7 @@ function BracketMatch({ m }: { m: Match }) {
 
 function winnerTeam(m: Match): { id: string; name: string } | null {
   if (m.status !== "FINISHED" || !m.homeTeam || !m.awayTeam) return null;
-  if (m.homeScore === m.awayScore) {
+  if (m.scoreUnknown || m.homeScore === m.awayScore) {
     if (!m.penaltyWinnerId) return null;
     return m.penaltyWinnerId === m.homeTeamId ? m.homeTeam : m.awayTeam;
   }

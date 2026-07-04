@@ -13,6 +13,7 @@ type Match = {
   startedAt: string | null;
   homeScore: number; awayScore: number;
   penaltyWinnerId: string | null;
+  scoreUnknown: boolean;
   mvpId: string | null;
   homeTeam: Team; awayTeam: Team; goals: Goal[];
 };
@@ -117,6 +118,11 @@ export function MatchEditor({ match }: { match: Match }) {
               ▶ START
             </button>
           )}
+          {m.status === "FINISHED" && m.scoreUnknown && m.penaltyWinnerId && (
+            <span className="chip text-accent">
+              Passa: {(m.penaltyWinnerId === m.homeTeam?.id ? m.homeTeam?.name : m.awayTeam?.name)}
+            </span>
+          )}
           {m.status === "LIVE" && (
             <>
               <div className="chip text-destructive"><span className="live-dot" /> LIVE {t.half}T · {t.minute}'</div>
@@ -137,8 +143,29 @@ export function MatchEditor({ match }: { match: Match }) {
           )}
         </div>
 
-        {/* Penalty winner — only when finished AND draw */}
-        {m.status === "FINISHED" && m.homeScore === m.awayScore && m.homeTeam && m.awayTeam && (
+        {/* Pass without result — only when scheduled with both teams */}
+        {m.status === "SCHEDULED" && m.homeTeam && m.awayTeam && (
+          <div className="border-t border-white/10 pt-3 space-y-2">
+            <div className="text-xs uppercase tracking-widest text-white/60 text-center">
+              Oppure passa il turno senza risultato
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              {[m.homeTeam, m.awayTeam].map((t) => (
+                <button key={t!.id}
+                  onClick={() => {
+                    if (confirm(`Segnare ${t!.name} come vincente senza risultato?`))
+                      call({ action: "advance", teamId: t!.id });
+                  }}
+                  className="rounded-lg px-3 py-2 font-bold text-sm bg-white/5 hover:bg-accent hover:text-brand-bg transition">
+                  Passa {t!.name}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {/* Penalty winner — only when finished AND draw (real 0-0 or scores tied), NOT when scoreUnknown */}
+        {m.status === "FINISHED" && !m.scoreUnknown && m.homeScore === m.awayScore && m.homeTeam && m.awayTeam && (
           <div className="border-t border-white/10 pt-3 space-y-2">
             <div className="text-xs uppercase tracking-widest text-white/60 text-center">
               Pareggio — vincitore ai rigori
