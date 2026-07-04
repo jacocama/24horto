@@ -7,7 +7,7 @@ export function EditionBanner({ edition }: { edition: { year: number; isCurrent:
       <span>
         Stai visualizzando l'edizione <span className="font-bold text-accent">{edition.year}</span> (archivio)
       </span>
-      <Link href="/" className="text-xs underline text-white/70 hover:text-white">torna all'attuale</Link>
+      <Link href="/diretta" className="text-xs underline text-white/70 hover:text-white">torna all'attuale</Link>
     </div>
   );
 }

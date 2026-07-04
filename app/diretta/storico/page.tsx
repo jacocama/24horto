@@ -48,11 +48,11 @@ export default async function Storico() {
               </div>
               <div className="flex flex-wrap gap-2 text-xs pt-1">
                 {[
-                  ...(e.isCurrent ? [{ href: "/", label: "Live" }] : []),
-                  { href: e.isCurrent ? "/tabellone" : `/tabellone?year=${e.year}`, label: "Tabellone" },
-                  { href: e.isCurrent ? "/squadre" : `/squadre?year=${e.year}`, label: "Squadre" },
-                  { href: e.isCurrent ? "/marcatori" : `/marcatori?year=${e.year}`, label: "Marcatori" },
-                  { href: e.isCurrent ? "/partite" : `/partite?year=${e.year}`, label: "Partite" },
+                  ...(e.isCurrent ? [{ href: "/diretta", label: "Live" }] : []),
+                  { href: e.isCurrent ? "/diretta/tabellone" : `/diretta/tabellone?year=${e.year}`, label: "Tabellone" },
+                  { href: e.isCurrent ? "/diretta/squadre" : `/diretta/squadre?year=${e.year}`, label: "Squadre" },
+                  { href: e.isCurrent ? "/diretta/marcatori" : `/diretta/marcatori?year=${e.year}`, label: "Marcatori" },
+                  { href: e.isCurrent ? "/diretta/partite" : `/diretta/partite?year=${e.year}`, label: "Partite" },
                 ].map((l) => (
                   <Link key={l.href} href={l.href} className="chip hover:bg-accent hover:text-brand-bg">{l.label}</Link>
                 ))}
