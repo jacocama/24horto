@@ -10,7 +10,6 @@
     "db:push": "prisma db push",
     "db:seed": "tsx prisma/seed.ts",
     "db:seed:2025": "tsx prisma/seedEdition2025.ts",
-    "db:add:mvps2025": "tsx prisma/addMvps2025.ts",
     "postinstall": "prisma generate"
   },
   "dependencies": {

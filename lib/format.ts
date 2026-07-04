@@ -7,14 +7,12 @@ export function fmtDate(d: Date | string) {
   return date.toLocaleDateString("it-IT", { weekday: "short", day: "2-digit", month: "short" });
 }
 export const phaseLabel: Record<string, string> = {
-  UPPER_R1: "Tabellone Sopra - 1° Turno",
-  UPPER_R2: "Tabellone Sopra - 2° Turno",
-  UPPER_R3: "Tabellone Sopra - Quarti",
-  UPPER_R4: "Tabellone Sopra - Semifinali",
-  UPPER_FINAL: "Finale Tabellone Sopra",
-  LOWER_R1: "Tabellone Sotto - 1° Turno",
-  LOWER_R2: "Tabellone Sotto - 2° Turno",
-  LOWER_R3: "Tabellone Sotto - Semifinali",
-  LOWER_FINAL: "Finale Tabellone Sotto",
-  GRAND_FINAL: "FINALISSIMA",
+  PARADISO_R1: "Paradiso · 1° Turno",
+  PARADISO_R2: "Paradiso · 2° Turno",
+  INFERNO_R1: "Inferno · 1° Turno",
+  INFERNO_R2: "Inferno · 2° Turno",
+  PLAYOFF_R16: "Playoff · Ottavi",
+  PLAYOFF_QF: "Playoff · Quarti",
+  PLAYOFF_SF: "Playoff · Semifinali",
+  PLAYOFF_FINAL: "🏆 FINALE",
 };

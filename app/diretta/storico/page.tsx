@@ -9,7 +9,7 @@ export default async function Storico() {
     include: {
       _count: { select: { teams: true, matches: true } },
       matches: {
-        where: { phase: "GRAND_FINAL", status: "FINISHED" },
+        where: { phase: "PLAYOFF_FINAL", status: "FINISHED" },
         include: { homeTeam: true, awayTeam: true },
         take: 1,
       },

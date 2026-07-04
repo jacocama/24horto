@@ -39,7 +39,6 @@ async function main() {
   const YEAR = 2025;
   console.log(`Seeding edition ${YEAR}...`);
 
-  // Wipe existing 2025 if present
   const existing = await prisma.edition.findUnique({ where: { year: YEAR } });
   if (existing) {
     await prisma.edition.delete({ where: { id: existing.id } });
@@ -50,11 +49,9 @@ async function main() {
     data: { year: YEAR, name: `Orto 24H ${YEAR}`, isCurrent: false },
   });
 
-  // Teams + players
   const teams = [];
   for (let i = 0; i < 32; i++) {
-    const playerCount = 7;
-    const players = Array.from({ length: playerCount }, () => ({
+    const players = Array.from({ length: 7 }, () => ({
       name: `${rand(PLAYER_FIRSTS)} ${rand(PLAYER_LASTS)}`,
       isCoach: false,
     }));
@@ -74,80 +71,61 @@ async function main() {
   }
   console.log(`Created ${teams.length} teams`);
 
-  // Bracket: identical to current edition structure
-  const upperRounds: { phase: Phase; count: number }[] = [
-    { phase: Phase.UPPER_R1, count: 16 },
-    { phase: Phase.UPPER_R2, count: 8 },
-    { phase: Phase.UPPER_R3, count: 4 },
-    { phase: Phase.UPPER_R4, count: 2 },
-    { phase: Phase.UPPER_FINAL, count: 1 },
+  // Create all 55 matches upfront (scheduling)
+  const rounds: { phase: Phase; count: number; codePrefix: string }[] = [
+    { phase: Phase.PARADISO_R1, count: 16, codePrefix: "P1" },
+    { phase: Phase.INFERNO_R1, count: 8, codePrefix: "I1" },
+    { phase: Phase.PARADISO_R2, count: 8, codePrefix: "P2" },
+    { phase: Phase.INFERNO_R2, count: 8, codePrefix: "I2" },
+    { phase: Phase.PLAYOFF_R16, count: 8, codePrefix: "OTT" },
+    { phase: Phase.PLAYOFF_QF, count: 4, codePrefix: "QF" },
+    { phase: Phase.PLAYOFF_SF, count: 2, codePrefix: "SF" },
+    { phase: Phase.PLAYOFF_FINAL, count: 1, codePrefix: "FIN" },
   ];
-  const lowerRounds: { phase: Phase; count: number }[] = [
-    { phase: Phase.LOWER_R1, count: 8 },
-    { phase: Phase.LOWER_R2, count: 4 },
-    { phase: Phase.LOWER_R3, count: 2 },
-    { phase: Phase.LOWER_FINAL, count: 1 },
-  ];
-
-  // Dates: torneo del weekend del 28-29 giugno 2025
   const start = new Date(`${YEAR}-06-28T09:00:00`);
   let cursor = new Date(start);
   const step = 35 * 60 * 1000;
 
-  type Slot = { id: string; phase: Phase; idx: number; homeTeamId?: string; awayTeamId?: string };
-  const upper: Slot[][] = [];
-  const lower: Slot[][] = [];
-
-  const shuffled = shuffle(teams);
-
-  for (let r = 0; r < upperRounds.length; r++) {
-    const row: Slot[] = [];
-    for (let i = 0; i < upperRounds[r].count; i++) {
-      const code = `U${r + 1}-${i + 1}`;
-      const data: any = { code, phase: upperRounds[r].phase, scheduledAt: new Date(cursor), editionId: edition.id };
-      if (r === 0) {
-        data.homeTeamId = shuffled[i * 2].id;
-        data.awayTeamId = shuffled[i * 2 + 1].id;
-      }
-      const m = await prisma.match.create({ data });
-      row.push({ id: m.id, phase: upperRounds[r].phase, idx: i, homeTeamId: data.homeTeamId, awayTeamId: data.awayTeamId });
-      cursor = new Date(cursor.getTime() + step);
-    }
-    upper.push(row);
-  }
-  for (let r = 0; r < lowerRounds.length; r++) {
-    const row: Slot[] = [];
-    for (let i = 0; i < lowerRounds[r].count; i++) {
-      const code = `L${r + 1}-${i + 1}`;
+  const byPhase: Record<string, string[]> = {}; // phase -> match ids
+  for (const r of rounds) {
+    byPhase[r.phase] = [];
+    for (let i = 0; i < r.count; i++) {
       const m = await prisma.match.create({
-        data: { code, phase: lowerRounds[r].phase, scheduledAt: new Date(cursor), editionId: edition.id },
+        data: {
+          code: `${r.codePrefix}-${i + 1}`,
+          phase: r.phase,
+          scheduledAt: new Date(cursor),
+          editionId: edition.id,
+        },
       });
-      row.push({ id: m.id, phase: lowerRounds[r].phase, idx: i });
+      byPhase[r.phase].push(m.id);
       cursor = new Date(cursor.getTime() + step);
     }
-    lower.push(row);
   }
-  const grand = await prisma.match.create({
-    data: { code: "GF-1", phase: Phase.GRAND_FINAL, scheduledAt: new Date(cursor), editionId: edition.id },
-  });
 
-  // Helper: simulate a match — set scores, assign goals to random players, propagate
-  async function playMatch(matchId: string, homeTeamId: string, awayTeamId: string): Promise<{ winner: string; loser: string }> {
-    let hs = randInt(0, 5);
-    let as = randInt(0, 5);
+  // Play matches simulating a full past edition
+  async function playMatch(
+    matchId: string,
+    homeTeamId: string,
+    awayTeamId: string
+  ): Promise<{ winner: string; loser: string }> {
+    const hs = randInt(0, 5);
+    const as = randInt(0, 5);
     let penaltyWinnerId: string | null = null;
-
-    // If draw, decide penalty winner randomly
-    if (hs === as) {
-      penaltyWinnerId = Math.random() < 0.5 ? homeTeamId : awayTeamId;
-    }
+    if (hs === as) penaltyWinnerId = Math.random() < 0.5 ? homeTeamId : awayTeamId;
 
     await prisma.match.update({
       where: { id: matchId },
-      data: { homeTeamId, awayTeamId, homeScore: hs, awayScore: as, status: "FINISHED", penaltyWinnerId },
+      data: {
+        homeTeamId,
+        awayTeamId,
+        homeScore: hs,
+        awayScore: as,
+        status: "FINISHED",
+        penaltyWinnerId,
+      },
     });
 
-    // Add goals attributed to random non-coach players
     const homePlayers = await prisma.player.findMany({ where: { teamId: homeTeamId, isCoach: false } });
     const awayPlayers = await prisma.player.findMany({ where: { teamId: awayTeamId, isCoach: false } });
     for (let i = 0; i < hs; i++) {
@@ -161,6 +139,12 @@ async function main() {
       });
     }
 
+    // Random MVP from either team
+    const all = [...homePlayers, ...awayPlayers];
+    if (all.length) {
+      await prisma.match.update({ where: { id: matchId }, data: { mvpId: rand(all).id } });
+    }
+
     let winner: string, loser: string;
     if (hs === as) {
       winner = penaltyWinnerId!;
@@ -172,78 +156,79 @@ async function main() {
     return { winner, loser };
   }
 
-  // Play upper R1, dropping losers into lower R1
-  const lowerR1Incoming: string[] = []; // losers from U1
-  for (let i = 0; i < upper[0].length; i++) {
-    const m = upper[0][i];
-    const { winner, loser } = await playMatch(m.id, m.homeTeamId!, m.awayTeamId!);
-    // assign winner to next upper
-    const nextU = upper[1][Math.floor(i / 2)];
-    if (i % 2 === 0) nextU.homeTeamId = winner; else nextU.awayTeamId = winner;
-    await prisma.match.update({
-      where: { id: nextU.id },
-      data: i % 2 === 0 ? { homeTeamId: winner } : { awayTeamId: winner },
-    });
-    lowerR1Incoming.push(loser);
+  const shuffled = shuffle(teams);
+
+  // PARADISO_R1 (pair up random teams)
+  const paradisoR2Slots: { home?: string; away?: string }[] = Array.from({ length: 8 }, () => ({}));
+  const infernoR1Slots: { home?: string; away?: string }[] = Array.from({ length: 8 }, () => ({}));
+
+  for (let i = 0; i < 16; i++) {
+    const home = shuffled[i * 2].id;
+    const away = shuffled[i * 2 + 1].id;
+    const { winner, loser } = await playMatch(byPhase[Phase.PARADISO_R1][i], home, away);
+    const nextP = paradisoR2Slots[Math.floor(i / 2)];
+    if (!nextP.home) nextP.home = winner; else nextP.away = winner;
+    const nextI = infernoR1Slots[Math.floor(i / 2)];
+    if (!nextI.home) nextI.home = loser; else nextI.away = loser;
   }
 
-  // Pair losers into lower R1 (already in random order from upper R1)
-  for (let i = 0; i < lower[0].length; i++) {
-    const home = lowerR1Incoming[i * 2];
-    const away = lowerR1Incoming[i * 2 + 1];
-    lower[0][i].homeTeamId = home;
-    lower[0][i].awayTeamId = away;
-    await prisma.match.update({
-      where: { id: lower[0][i].id },
-      data: { homeTeamId: home, awayTeamId: away },
-    });
+  // INFERNO_R1 (play all)
+  const infernoR2Slots: { home?: string; away?: string }[] = Array.from({ length: 8 }, () => ({}));
+  for (let i = 0; i < 8; i++) {
+    const { winner } = await playMatch(byPhase[Phase.INFERNO_R1][i], infernoR1Slots[i].home!, infernoR1Slots[i].away!);
+    infernoR2Slots[i].home = winner;
   }
 
-  // Generic round-by-round play: upper R2+ (winner only advances upper), lower R1+ (winner only advances lower)
-  for (let r = 1; r < upper.length; r++) {
-    for (let i = 0; i < upper[r].length; i++) {
-      const m = upper[r][i];
-      const { winner } = await playMatch(m.id, m.homeTeamId!, m.awayTeamId!);
-      if (r < upper.length - 1) {
-        const nextU = upper[r + 1][Math.floor(i / 2)];
-        nextU[i % 2 === 0 ? "homeTeamId" : "awayTeamId"] = winner;
-        await prisma.match.update({
-          where: { id: nextU.id },
-          data: i % 2 === 0 ? { homeTeamId: winner } : { awayTeamId: winner },
-        });
-      }
-    }
-  }
-  for (let r = 0; r < lower.length; r++) {
-    for (let i = 0; i < lower[r].length; i++) {
-      const m = lower[r][i];
-      const { winner } = await playMatch(m.id, m.homeTeamId!, m.awayTeamId!);
-      if (r < lower.length - 1) {
-        const nextL = lower[r + 1][Math.floor(i / 2)];
-        nextL[i % 2 === 0 ? "homeTeamId" : "awayTeamId"] = winner;
-        await prisma.match.update({
-          where: { id: nextL.id },
-          data: i % 2 === 0 ? { homeTeamId: winner } : { awayTeamId: winner },
-        });
-      }
-    }
+  // PARADISO_R2 (play all)
+  const paradisoR2Winners: string[] = [];
+  for (let i = 0; i < 8; i++) {
+    const { winner, loser } = await playMatch(byPhase[Phase.PARADISO_R2][i], paradisoR2Slots[i].home!, paradisoR2Slots[i].away!);
+    paradisoR2Winners.push(winner);
+    infernoR2Slots[i].away = loser;
   }
 
-  // Grand final: upper champ vs lower champ
-  const upperFinal = await prisma.match.findUnique({ where: { id: upper[upper.length - 1][0].id } });
-  const lowerFinal = await prisma.match.findUnique({ where: { id: lower[lower.length - 1][0].id } });
-  const upperChamp = (upperFinal!.homeScore > upperFinal!.awayScore)
-    || (upperFinal!.homeScore === upperFinal!.awayScore && upperFinal!.penaltyWinnerId === upperFinal!.homeTeamId)
-      ? upperFinal!.homeTeamId! : upperFinal!.awayTeamId!;
-  const lowerChamp = (lowerFinal!.homeScore > lowerFinal!.awayScore)
-    || (lowerFinal!.homeScore === lowerFinal!.awayScore && lowerFinal!.penaltyWinnerId === lowerFinal!.homeTeamId)
-      ? lowerFinal!.homeTeamId! : lowerFinal!.awayTeamId!;
+  // INFERNO_R2 (play all)
+  const infernoR2Winners: string[] = [];
+  for (let i = 0; i < 8; i++) {
+    const { winner } = await playMatch(byPhase[Phase.INFERNO_R2][i], infernoR2Slots[i].home!, infernoR2Slots[i].away!);
+    infernoR2Winners.push(winner);
+  }
 
-  await playMatch(grand.id, upperChamp, lowerChamp);
+  // PLAYOFF_R16 (sorteggio 16 = 8+8)
+  const qualified = shuffle([...paradisoR2Winners, ...infernoR2Winners]);
+  const qfSlots: { home?: string; away?: string }[] = Array.from({ length: 4 }, () => ({}));
+  for (let i = 0; i < 8; i++) {
+    const { winner } = await playMatch(byPhase[Phase.PLAYOFF_R16][i], qualified[i * 2], qualified[i * 2 + 1]);
+    // We'll draw QF from all 8 winners after
+    qfSlots[Math.floor(i / 2)] = qfSlots[Math.floor(i / 2)];
+  }
 
-  const gf = await prisma.match.findUnique({ where: { id: grand.id }, include: { homeTeam: true, awayTeam: true } });
-  const champion = gf!.homeScore > gf!.awayScore || (gf!.homeScore === gf!.awayScore && gf!.penaltyWinnerId === gf!.homeTeamId)
-    ? gf!.homeTeam : gf!.awayTeam;
+  // Recollect R16 winners from DB
+  const r16Matches = await prisma.match.findMany({ where: { id: { in: byPhase[Phase.PLAYOFF_R16] } } });
+  const r16Winners = r16Matches.map((m) => {
+    if (m.homeScore === m.awayScore) return m.penaltyWinnerId!;
+    return m.homeScore > m.awayScore ? m.homeTeamId! : m.awayTeamId!;
+  });
+
+  // PLAYOFF_QF (sorteggio)
+  const qfDrawn = shuffle(r16Winners);
+  const sfSlots: { home?: string; away?: string }[] = Array.from({ length: 2 }, () => ({}));
+  for (let i = 0; i < 4; i++) {
+    const { winner } = await playMatch(byPhase[Phase.PLAYOFF_QF][i], qfDrawn[i * 2], qfDrawn[i * 2 + 1]);
+    const s = sfSlots[Math.floor(i / 2)];
+    if (!s.home) s.home = winner; else s.away = winner;
+  }
+
+  // PLAYOFF_SF (bracket)
+  const finalSlot: { home?: string; away?: string } = {};
+  for (let i = 0; i < 2; i++) {
+    const { winner } = await playMatch(byPhase[Phase.PLAYOFF_SF][i], sfSlots[i].home!, sfSlots[i].away!);
+    if (!finalSlot.home) finalSlot.home = winner; else finalSlot.away = winner;
+  }
+
+  // FINAL
+  const { winner: champ } = await playMatch(byPhase[Phase.PLAYOFF_FINAL][0], finalSlot.home!, finalSlot.away!);
+  const champion = await prisma.team.findUnique({ where: { id: champ } });
   console.log(`🏆 Campione 2025: ${champion!.name}`);
   console.log("Seed 2025 done.");
 }
