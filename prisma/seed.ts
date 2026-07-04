@@ -131,10 +131,14 @@ async function main() {
       data: { winnerNext: byPhase[Phase.PLAYOFF_QF][Math.floor(i / 2)].id },
     });
   }
+  // SF pairing (cross bracket, come da tabellone ufficiale):
+  //   SF[0] = QF[0] winner vs QF[3] winner
+  //   SF[1] = QF[1] winner vs QF[2] winner
+  const qfToSf = [0, 1, 1, 0];
   for (let i = 0; i < 4; i++) {
     await prisma.match.update({
       where: { id: byPhase[Phase.PLAYOFF_QF][i].id },
-      data: { winnerNext: byPhase[Phase.PLAYOFF_SF][Math.floor(i / 2)].id },
+      data: { winnerNext: byPhase[Phase.PLAYOFF_SF][qfToSf[i]].id },
     });
   }
   for (let i = 0; i < 2; i++) {

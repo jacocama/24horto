@@ -14,5 +14,5 @@ export const phaseLabel: Record<string, string> = {
   PLAYOFF_R16: "Ottavi di Finale",
   PLAYOFF_QF: "Quarti di Finale",
   PLAYOFF_SF: "Playoff · Semifinali",
-  PLAYOFF_FINAL: "🏆 FINALE",
+  PLAYOFF_FINAL: "Finale",
 };

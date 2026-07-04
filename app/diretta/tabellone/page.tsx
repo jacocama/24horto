@@ -39,28 +39,26 @@ export default async function Tabellone({ searchParams }: { searchParams: Promis
       <EditionBanner edition={edition} />
       <h1 className="text-2xl font-black">Tabellone</h1>
 
-      {finale && <FinalBanner finale={finale} champion={champion} />}
+      {champion && <ChampionBanner name={champion.name} />}
 
       <div className="grid grid-cols-3 gap-2 text-[10px] font-bold text-center">
-        <div className="rounded-lg py-1 bg-sky-400/15 text-sky-300 border border-sky-400/30">😇 PARADISO</div>
-        <div className="rounded-lg py-1 bg-red-500/15 text-red-300 border border-red-500/30">😈 INFERNO</div>
-        <div className="rounded-lg py-1 bg-accent/15 text-accent border border-accent/30">🏆 PLAYOFF</div>
+        <div className="rounded-lg py-1 bg-sky-400/15 text-sky-300 border border-sky-400/30">PARADISO</div>
+        <div className="rounded-lg py-1 bg-red-500/15 text-red-300 border border-red-500/30">INFERNO</div>
+        <div className="rounded-lg py-1 bg-accent/15 text-accent border border-accent/30">PLAYOFF</div>
       </div>
 
       <BracketSection
         title="Paradiso"
-        emoji="😇"
         tint="sky"
         rounds={[
           { label: "1° Turno", matches: byPhase("PARADISO_R1") },
           { label: "2° Turno", matches: byPhase("PARADISO_R2") },
         ]}
-        note="I vincitori del 2° turno accedono ai Playoff (ottavi). Chi perde va all'Inferno."
+        note="I vincitori del 2° turno accedono ai Playoff. Chi perde va all'Inferno."
       />
 
       <BracketSection
         title="Inferno"
-        emoji="😈"
         tint="red"
         rounds={[
           { label: "1° Turno", matches: byPhase("INFERNO_R1") },
@@ -71,12 +69,12 @@ export default async function Tabellone({ searchParams }: { searchParams: Promis
 
       <BracketSection
         title="Playoff"
-        emoji="🏆"
         tint="accent"
         rounds={[
           { label: "Ottavi", matches: byPhase("PLAYOFF_R16") },
           { label: "Quarti", matches: byPhase("PLAYOFF_QF") },
           { label: "Semifinali", matches: byPhase("PLAYOFF_SF") },
+          { label: "Finale", matches: finale ? [finale] : [] },
         ]}
         note="16 qualificate: 8 dal Paradiso + 8 dall'Inferno. Accoppiamenti secondo il tabellone ufficiale."
       />
@@ -84,33 +82,19 @@ export default async function Tabellone({ searchParams }: { searchParams: Promis
   );
 }
 
-function FinalBanner({ finale, champion }: { finale: Match; champion: { id: string; name: string } | null }) {
+function ChampionBanner({ name }: { name: string }) {
   return (
-    <Link href={`/diretta/partite/${finale.id}`} className="block card border-accent/60 bg-gradient-to-br from-accent/20 via-accent/5 to-transparent">
-      <div className="text-[10px] uppercase tracking-widest text-accent">🏆 Finalissima</div>
-      <div className="text-lg font-extrabold mt-1 flex items-center justify-between gap-3">
-        <span className="truncate">{finale.homeTeam?.name ?? "Da definire"}</span>
-        <span className="text-xl">vs</span>
-        <span className="truncate text-right">{finale.awayTeam?.name ?? "Da definire"}</span>
-      </div>
-      {finale.status === "FINISHED" && champion ? (
-        <div className="mt-2 text-sm">
-          <span className="text-white/60">Vincente: </span>
-          <span className="font-black text-accent">🏆 {champion.name}</span>
-        </div>
-      ) : (
-        <div className="mt-1 text-xs text-white/50">
-          {finale.status === "LIVE" ? `🔴 LIVE · ${finale.homeScore} - ${finale.awayScore}` : "Da giocare"}
-        </div>
-      )}
-    </Link>
+    <div className="rounded-2xl border border-accent/60 bg-gradient-to-br from-accent/20 via-accent/5 to-transparent px-4 py-3 text-center">
+      <div className="text-[10px] uppercase tracking-widest text-accent">Campione</div>
+      <div className="text-2xl font-black mt-1">{name}</div>
+    </div>
   );
 }
 
 function BracketSection({
-  title, emoji, tint, rounds, note,
+  title, tint, rounds, note,
 }: {
-  title: string; emoji: string; tint: "sky" | "red" | "accent";
+  title: string; tint: "sky" | "red" | "accent";
   rounds: { label: string; matches: Match[] }[]; note?: string;
 }) {
   const bg = tint === "sky" ? "bg-sky-400/5 border-sky-400/20" :
@@ -119,9 +103,7 @@ function BracketSection({
   const label = tint === "sky" ? "text-sky-300" : tint === "red" ? "text-red-300" : "text-accent";
   return (
     <section className={`rounded-2xl border p-3 ${bg}`}>
-      <h2 className={`text-lg font-black uppercase tracking-wider ${label} mb-3`}>
-        {emoji} {title}
-      </h2>
+      <h2 className={`text-lg font-black uppercase tracking-wider ${label} mb-3`}>{title}</h2>
       <div className="space-y-4">
         {rounds.filter((r) => r.matches.length > 0).map((round) => (
           <div key={round.label}>

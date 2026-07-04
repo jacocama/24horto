@@ -69,30 +69,22 @@ const R16_WINNER: number[] = [
   1, // Ottavo 8: SCAPPATI vs TIRAX              -> TIRAX
 ];
 
-// Quarti (bracket normale, coppie: R16[0]&[1] -> QF[0], ecc.)
+// Quarti (bracket adiacente: R16[0]&[1] -> QF[0], ecc.)
 const QF_WINNER: number[] = [
-  1, // QF1: I CALMI vs BAR VENEZIA       -> BAR VENEZIA
-  0, // QF2: GARRA vs BAR GEL RIVIERA     -> GARRA? no: dal tabellone -> BAR GEL RIVIERA
-  1, // QF3: KIKO vs AS ROMA              -> AS ROMA
-  1, // QF4: BEOR vs TIRAX                -> TIRAX
+  1, // QF1: I CALMI vs BAR VENEZIA         -> BAR VENEZIA
+  0, // QF2: GARRA CHARRUA vs BAR GEL RIV.  -> GARRA CHARRUA
+  1, // QF3: KIKO CALDAIE vs AS ROMA        -> AS ROMA
+  1, // QF4: BEOR vs TIRAX                  -> TIRAX
 ];
-// nota: quarto 2 -> BAR GEL RIVIERA (away). Ma home era GARRA, away BAR GEL. Setto 1.
-QF_WINNER[1] = 1;
 
-// Semifinali (bracket: QF[0]&[1] -> SF[0], QF[2]&[3] -> SF[1])
+// Semifinali (bracket CROSSATO: SF0 = QF0+QF3, SF1 = QF1+QF2)
 const SF_WINNER: number[] = [
-  0, // SF1: BAR VENEZIA vs BAR GEL RIVIERA -> BAR VENEZIA
-  0, // SF2: AS ROMA vs TIRAX               -> AS ROMA
+  0, // SF1: BAR VENEZIA vs TIRAX        -> BAR VENEZIA
+  1, // SF2: GARRA CHARRUA vs AS ROMA    -> AS ROMA
 ];
 
-// Finale
-const FINAL_WINNER = 1; // BAR VENEZIA vs AS ROMA -> BAR VENEZIA
-// Setup: la finale prende SF[0] winner come home e SF[1] winner come away.
-// SF1 winner = BAR VENEZIA (home), SF2 winner = AS ROMA (away).
-// BAR VENEZIA = home = 0. Setto FINAL_WINNER=0.
-// (mi correggo)
-// -> Home BAR VENEZIA, Away AS ROMA, vincente BAR VENEZIA => 0
-const FINAL_WINNER_FIX = 0;
+// Finale: SF0 winner (BAR VENEZIA, home) vs SF1 winner (AS ROMA, away)
+const FINAL_WINNER = 0; // BAR VENEZIA
 
 const PLAYER_FIRSTS = [
   "Luca", "Marco", "Andrea", "Francesco", "Giuseppe", "Antonio", "Matteo", "Davide",
@@ -281,11 +273,14 @@ async function main() {
     qfWinnerNames.push(QF_WINNER[i] === 0 ? home : away);
   }
 
-  // ------ SEMIFINALI ------
+  // ------ SEMIFINALI (bracket CROSSATO) ------
+  // SF0 = QF0 winner (home) vs QF3 winner (away)
+  // SF1 = QF1 winner (home) vs QF2 winner (away)
+  const sfPairs = [[0, 3], [1, 2]];
   const sfWinnerNames: string[] = [];
   for (let i = 0; i < 2; i++) {
-    const home = qfWinnerNames[i * 2];
-    const away = qfWinnerNames[i * 2 + 1];
+    const home = qfWinnerNames[sfPairs[i][0]];
+    const away = qfWinnerNames[sfPairs[i][1]];
     await playMatch(byPhase[Phase.PLAYOFF_SF][i], home, away, SF_WINNER[i] as 0 | 1);
     sfWinnerNames.push(SF_WINNER[i] === 0 ? home : away);
   }
@@ -293,9 +288,9 @@ async function main() {
   // ------ FINALE ------
   const finalHome = sfWinnerNames[0];
   const finalAway = sfWinnerNames[1];
-  await playMatch(byPhase[Phase.PLAYOFF_FINAL][0], finalHome, finalAway, FINAL_WINNER_FIX as 0 | 1);
+  await playMatch(byPhase[Phase.PLAYOFF_FINAL][0], finalHome, finalAway, FINAL_WINNER as 0 | 1);
 
-  const champion = FINAL_WINNER_FIX === 0 ? finalHome : finalAway;
+  const champion = FINAL_WINNER === 0 ? finalHome : finalAway;
   console.log(`🏆 Campione 2025: ${champion}`);
   console.log("Seed 2025 done.");
 }
