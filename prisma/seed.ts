@@ -93,14 +93,14 @@ async function main() {
     }
   }
 
-  // Advancement wiring
-  //   P.R1[i]  winner -> P.R2[i/2],  loser -> I.R1[i/2]
+  // Advancement wiring (fully deterministic — no draws)
+  //   P.R1[i]  winner -> P.R2[i/2],   loser -> I.R1[i/2]
   //   I.R1[i]  winner -> I.R2[i]
-  //   P.R2[i]  loser  -> I.R2[i]
+  //   P.R2[i]  winner -> R16[i],      loser -> I.R2[i XOR 1]  (pair swap)
+  //   I.R2[i]  winner -> R16[i XOR 2] (pair-of-pairs swap)
+  //   R16[i]   winner -> QF[i/2]
   //   QF[i]    winner -> SF[i/2]
   //   SF[i]    winner -> FINAL
-  // Playoff R16 is drawn manually from P.R2 + I.R2 winners.
-  // Playoff QF is drawn manually from R16 winners.
   for (let i = 0; i < 16; i++) {
     await prisma.match.update({
       where: { id: byPhase[Phase.PARADISO_R1][i].id },
@@ -117,7 +117,18 @@ async function main() {
     });
     await prisma.match.update({
       where: { id: byPhase[Phase.PARADISO_R2][i].id },
-      data: { loserNext: byPhase[Phase.INFERNO_R2][i].id },
+      data: {
+        winnerNext: byPhase[Phase.PLAYOFF_R16][i].id,
+        loserNext:  byPhase[Phase.INFERNO_R2][i ^ 1].id,
+      },
+    });
+    await prisma.match.update({
+      where: { id: byPhase[Phase.INFERNO_R2][i].id },
+      data: { winnerNext: byPhase[Phase.PLAYOFF_R16][i ^ 2].id },
+    });
+    await prisma.match.update({
+      where: { id: byPhase[Phase.PLAYOFF_R16][i].id },
+      data: { winnerNext: byPhase[Phase.PLAYOFF_QF][Math.floor(i / 2)].id },
     });
   }
   for (let i = 0; i < 4; i++) {

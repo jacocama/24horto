@@ -11,8 +11,8 @@ export const phaseLabel: Record<string, string> = {
   PARADISO_R2: "Paradiso · 2° Turno",
   INFERNO_R1: "Inferno · 1° Turno",
   INFERNO_R2: "Inferno · 2° Turno",
-  PLAYOFF_R16: "Playoff · Ottavi",
-  PLAYOFF_QF: "Playoff · Quarti",
+  PLAYOFF_R16: "Ottavi di Finale",
+  PLAYOFF_QF: "Quarti di Finale",
   PLAYOFF_SF: "Playoff · Semifinali",
   PLAYOFF_FINAL: "🏆 FINALE",
 };

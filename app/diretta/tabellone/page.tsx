@@ -74,11 +74,11 @@ export default async function Tabellone({ searchParams }: { searchParams: Promis
         emoji="🏆"
         tint="accent"
         rounds={[
-          { label: "Ottavi (sorteggio)", matches: byPhase("PLAYOFF_R16") },
-          { label: "Quarti (sorteggio)", matches: byPhase("PLAYOFF_QF") },
+          { label: "Ottavi", matches: byPhase("PLAYOFF_R16") },
+          { label: "Quarti", matches: byPhase("PLAYOFF_QF") },
           { label: "Semifinali", matches: byPhase("PLAYOFF_SF") },
         ]}
-        note="16 qualificate: 8 dal Paradiso + 8 dall'Inferno. Ottavi e quarti sorteggiati; semifinali e finale a tabellone."
+        note="16 qualificate: 8 dal Paradiso + 8 dall'Inferno. Accoppiamenti secondo il tabellone ufficiale."
       />
     </div>
   );
