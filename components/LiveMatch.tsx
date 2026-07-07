@@ -8,14 +8,30 @@ type Data = {
   code: string;
   phase: string;
   status: string;
-  half: number;
-  currentMinute: number;
   homeScore: number;
   awayScore: number;
   homeTeam: { id: string; name: string } | null;
   awayTeam: { id: string; name: string } | null;
   goals: Goal[];
 };
+
+function TeamBlock({ name, score, goals }: { name?: string; score: number; goals: Goal[] }) {
+  return (
+    <div className="rounded-xl bg-black/30 border border-white/5 px-4 py-3">
+      <div className="flex items-center justify-between gap-3">
+        <span className="font-extrabold text-lg truncate">{name ?? "—"}</span>
+        <span className="text-3xl font-black tabular-nums shrink-0">{score}</span>
+      </div>
+      {goals.length > 0 && (
+        <div className="mt-2 pt-2 border-t border-white/5 space-y-0.5 text-sm text-white/70">
+          {goals.map((g) => (
+            <div key={g.id} className="truncate">⚽ {g.player?.name ?? "Gol"}</div>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
 
 export function LiveMatch({ initialId }: { initialId: string }) {
   const [data, setData] = useState<Data | null>(null);
@@ -60,33 +76,14 @@ export function LiveMatch({ initialId }: { initialId: string }) {
 
   return (
     <>
-      <div className="card border-accent/40">
-        <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-white/60 mb-3">
-          <span>{phaseLabel[data.phase] ?? data.phase} · {data.code}</span>
-          <span className="chip text-live"><span className="live-dot" /> LIVE {data.half}° tempo · {data.currentMinute}'</span>
-        </div>
-        <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="text-right font-extrabold text-lg truncate">{data.homeTeam?.name}</div>
-          <div className="text-4xl font-black tabular-nums px-4 py-2 rounded-xl bg-black/50 min-w-[110px] text-center">
-            {data.homeScore} - {data.awayScore}
-          </div>
-          <div className="text-left font-extrabold text-lg truncate">{data.awayTeam?.name}</div>
+      <div className="card border-accent/40 space-y-3">
+        <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-white/60">
+          <span className="truncate">{phaseLabel[data.phase] ?? data.phase} · {data.code}</span>
+          <span className="chip text-live"><span className="live-dot" /> LIVE</span>
         </div>
 
-        {(homeGoals.length + awayGoals.length) > 0 && (
-          <div className="mt-4 grid grid-cols-2 gap-3 text-sm">
-            <div className="space-y-1 text-right">
-              {homeGoals.map((g) => (
-                <div key={g.id} className="text-white/80">⚽ {g.player?.name ?? "Gol"}</div>
-              ))}
-            </div>
-            <div className="space-y-1">
-              {awayGoals.map((g) => (
-                <div key={g.id} className="text-white/80">⚽ {g.player?.name ?? "Gol"}</div>
-              ))}
-            </div>
-          </div>
-        )}
+        <TeamBlock name={data.homeTeam?.name} score={data.homeScore} goals={homeGoals} />
+        <TeamBlock name={data.awayTeam?.name} score={data.awayScore} goals={awayGoals} />
       </div>
 
       {celebration && <GoalCelebration key={celebration.key} team={celebration.team} player={celebration.player} />}
