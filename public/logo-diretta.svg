@@ -1,0 +1,19 @@
+<svg viewBox="0 0 200 200" xmlns="http://www.w3.org/2000/svg" aria-label="Diretta Orto">
+  <!-- C made of segmented dashes -->
+  <g fill="#ffffff">
+    <!-- top arc segments -->
+    <path d="M 60 30 Q 90 22 120 30 L 115 50 Q 92 44 70 50 Z"/>
+    <path d="M 38 56 Q 50 42 65 35 L 75 53 Q 62 60 53 70 Z"/>
+    <!-- left vertical segments -->
+    <rect x="22" y="78" width="22" height="14" rx="2"/>
+    <rect x="22" y="98" width="22" height="14" rx="2"/>
+    <!-- bottom arc segments -->
+    <path d="M 35 124 Q 45 144 60 158 L 73 142 Q 62 132 53 118 Z"/>
+    <path d="M 68 162 Q 90 174 118 170 L 113 150 Q 92 154 75 148 Z"/>
+    <!-- right small segments (lower right of C opening) -->
+    <rect x="128" y="120" width="22" height="14" rx="2"/>
+    <rect x="128" y="140" width="18" height="12" rx="2"/>
+  </g>
+  <!-- Orange play triangle on the right opening -->
+  <path d="M 120 38 L 178 70 L 132 92 Z" fill="#f0936d"/>
+</svg>

@@ -31,6 +31,11 @@
   --animate-drift-right: drift-right;
   --animate-drift-left: drift-left;
 
+  /* Diretta (torneo live) — brand additions */
+  --color-brand-bg: #1a151e;
+  --color-brand-card: #2a1f34;
+  --color-live: #ef4444;
+
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
