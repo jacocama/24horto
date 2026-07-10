@@ -54,23 +54,25 @@ export function QfPairingPanel({
       <div className="text-xs uppercase tracking-widest text-accent">
         🎲 Sorteggio quarti — {alreadyAssigned ? "modifica accoppiamenti" : "seleziona gli accoppiamenti"}
       </div>
-      <div className="space-y-2">
+      <div className="space-y-3">
         {pairs.map((p, i) => (
-          <div key={i} className="grid grid-cols-[auto_1fr_auto_1fr] items-center gap-2 text-sm">
-            <span className="text-white/50 text-xs font-bold w-8">QF{i + 1}</span>
+          <div key={i} className="rounded-lg bg-black/20 border border-white/5 p-2 space-y-1.5">
+            <div className="text-[10px] font-bold uppercase tracking-widest text-white/50">
+              Quarto {i + 1}
+            </div>
             <select value={p.home}
               onChange={(e) => setSlot(i, "home", e.target.value)}
-              className="bg-black/40 rounded px-2 py-1 border border-white/10 text-white truncate">
-              <option value="">— squadra —</option>
+              className="w-full bg-black/40 rounded px-2 py-2 border border-white/10 text-white">
+              <option value="">— casa —</option>
               {winners.map((w) => (
                 <option key={w.id} value={w.id} disabled={used.has(w.id) && p.home !== w.id}>{w.name}</option>
               ))}
             </select>
-            <span className="text-white/50 text-xs">vs</span>
+            <div className="text-center text-[10px] text-white/40">vs</div>
             <select value={p.away}
               onChange={(e) => setSlot(i, "away", e.target.value)}
-              className="bg-black/40 rounded px-2 py-1 border border-white/10 text-white truncate">
-              <option value="">— squadra —</option>
+              className="w-full bg-black/40 rounded px-2 py-2 border border-white/10 text-white">
+              <option value="">— ospite —</option>
               {winners.map((w) => (
                 <option key={w.id} value={w.id} disabled={used.has(w.id) && p.away !== w.id}>{w.name}</option>
               ))}

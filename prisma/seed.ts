@@ -3,14 +3,17 @@ import bcrypt from "bcryptjs";
 
 const prisma = new PrismaClient();
 
-function shuffle<T>(a: T[]): T[] {
-  const r = [...a];
-  for (let i = r.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [r[i], r[j]] = [r[j], r[i]];
-  }
-  return r;
-}
+// 32 squadre dell'edizione 2025 — base per il nuovo torneo
+const TEAMS = [
+  "METRO BOYS W.E.", "VERDE PISTACCHIO", "LE ZECCHE DELL'ORTO", "LOGGIA AC GR",
+  "AUTOSPA", "WORKS", "R.P. CLAUDIO E PAOLA", "WAY",
+  "GARRA CHARRUA", "E LA BASE", "R.P. BARI SC", "BAR VENEZIA",
+  "SERVICE CAR", "BAR GEL RIVIERA", "I. CALMI", "ORTO ORTO TRE",
+  "KIKO CALDAIE", "LEGEND'S TEAM", "TIRAX", "LE DUE PALME",
+  "BEOR", "LA SELECION", "TRANCERIA GM", "TITANIC PT F.D. GEN",
+  "AS ROMA", "MACELLERIA ALOIA", "SPACE JAM", "LA BANDA BASSOTTI",
+  "CALCIONAPPO E CEJAMA", "256", "SCAPPATI DI CASA", "CARCERA",
+];
 
 async function main() {
   console.log("Reset...");
@@ -21,12 +24,17 @@ async function main() {
   await prisma.edition.deleteMany();
   await prisma.adminUser.deleteMany();
 
-  const email = process.env.ADMIN_EMAIL || "admin@orto24h.it";
-  const password = process.env.ADMIN_PASSWORD || "changeme";
-  await prisma.adminUser.create({
-    data: { email, passwordHash: await bcrypt.hash(password, 10) },
-  });
-  console.log(`Admin: ${email} / ${password}`);
+  // Admin utenti
+  const admins = [
+    { email: process.env.ADMIN_EMAIL || "antoniocataldi93@gmail.com", password: process.env.ADMIN_PASSWORD || "Fcim1908!" },
+    { email: "24hadmin@orto.it", password: "loggiamerda" },
+  ];
+  for (const a of admins) {
+    await prisma.adminUser.create({
+      data: { email: a.email, passwordHash: await bcrypt.hash(a.password, 10) },
+    });
+    console.log(`Admin: ${a.email}`);
+  }
 
   const year = new Date().getFullYear();
   await prisma.edition.updateMany({ data: { isCurrent: false } });
@@ -36,16 +44,15 @@ async function main() {
   console.log(`Edition: ${edition.year}`);
 
   const teams = [];
-  for (let i = 1; i <= 32; i++) {
+  for (let i = 0; i < TEAMS.length; i++) {
     const players = Array.from({ length: 7 }, (_, k) => ({
       name: `Giocatore ${k + 1}`,
       isCoach: false,
     }));
-    if (Math.random() < 0.7) players.push({ name: `Mister 1`, isCoach: true });
     const t = await prisma.team.create({
       data: {
-        name: `SQUADRA ${i}`,
-        seed: i,
+        name: TEAMS[i],
+        seed: i + 1,
         editionId: edition.id,
         players: { create: players },
       },
@@ -65,31 +72,69 @@ async function main() {
     { phase: Phase.PLAYOFF_FINAL, count: 1, codePrefix: "FIN" },
   ];
 
-  const start = new Date();
-  start.setDate(start.getDate() + 1);
-  start.setHours(9, 0, 0, 0);
-  let cursor = new Date(start);
-  const step = 35 * 60 * 1000;
+  // Data d'inizio del torneo (sabato 18 luglio 2026 alle 09:00, editabile).
+  const startDate = new Date(process.env.TOURNAMENT_START || "2026-07-18T09:00:00");
+
+  // Orari precisi delle 55 partite (offset dal giorno d'inizio: 0 = sabato, 1 = domenica)
+  const SCHEDULE: { d: number; h: number; m: number }[] = [
+    // Paradiso R1 (16)
+    { d: 0, h: 9,  m: 0 },  { d: 0, h: 9,  m: 35 }, { d: 0, h: 10, m: 10 },
+    { d: 0, h: 10, m: 45 }, { d: 0, h: 11, m: 20 }, { d: 0, h: 11, m: 55 },
+    // pausa pranzo
+    { d: 0, h: 14, m: 0 },  { d: 0, h: 14, m: 35 }, { d: 0, h: 15, m: 10 },
+    { d: 0, h: 15, m: 45 }, { d: 0, h: 16, m: 20 }, { d: 0, h: 16, m: 55 },
+    { d: 0, h: 17, m: 30 }, { d: 0, h: 18, m: 5 },  { d: 0, h: 18, m: 40 },
+    { d: 0, h: 19, m: 15 },
+    // Inferno R1 (8)
+    { d: 0, h: 20, m: 0 },  { d: 0, h: 20, m: 35 }, { d: 0, h: 21, m: 10 },
+    { d: 0, h: 21, m: 45 }, { d: 0, h: 22, m: 20 }, { d: 0, h: 22, m: 55 },
+    { d: 0, h: 23, m: 30 }, { d: 1, h: 0,  m: 5 },
+    // Paradiso R2 (8)
+    { d: 1, h: 0,  m: 40 }, { d: 1, h: 1,  m: 15 }, { d: 1, h: 1,  m: 50 },
+    { d: 1, h: 2,  m: 25 }, { d: 1, h: 3,  m: 0 },  { d: 1, h: 3,  m: 35 },
+    { d: 1, h: 4,  m: 10 }, { d: 1, h: 4,  m: 45 },
+    // Inferno R2 (8)
+    { d: 1, h: 5,  m: 20 }, { d: 1, h: 5,  m: 55 }, { d: 1, h: 6,  m: 30 },
+    { d: 1, h: 7,  m: 5 },  { d: 1, h: 7,  m: 40 }, { d: 1, h: 8,  m: 15 },
+    { d: 1, h: 8,  m: 50 }, { d: 1, h: 9,  m: 25 },
+    // Ottavi (8) — pausa mattinata (~9:25 → 14:00)
+    { d: 1, h: 14, m: 0 },  { d: 1, h: 14, m: 35 }, { d: 1, h: 15, m: 10 },
+    { d: 1, h: 15, m: 45 }, { d: 1, h: 16, m: 20 }, { d: 1, h: 16, m: 55 },
+    { d: 1, h: 17, m: 30 }, { d: 1, h: 18, m: 5 },
+    // Quarti (4)
+    { d: 1, h: 18, m: 40 }, { d: 1, h: 19, m: 15 }, { d: 1, h: 19, m: 50 },
+    { d: 1, h: 20, m: 25 },
+    // Semifinali (2)
+    { d: 1, h: 21, m: 0 },  { d: 1, h: 21, m: 40 },
+    // Finale (1)
+    { d: 1, h: 23, m: 0 },
+  ];
+
+  const scheduledAtFor = (i: number): Date => {
+    const s = SCHEDULE[i];
+    const d = new Date(startDate);
+    d.setDate(d.getDate() + s.d);
+    d.setHours(s.h, s.m, 0, 0);
+    return d;
+  };
 
   const byPhase: Record<string, { id: string; idx: number }[]> = {};
-  const shuffled = shuffle(teams);
 
+  // Le partite sono create vuote (nessuna squadra assegnata).
+  // Il sorteggio del primo turno viene fatto dall'admin.
+  let scheduleIdx = 0;
   for (const r of rounds) {
     byPhase[r.phase] = [];
     for (let i = 0; i < r.count; i++) {
-      const data: any = {
-        code: `${r.codePrefix}-${i + 1}`,
-        phase: r.phase,
-        scheduledAt: new Date(cursor),
-        editionId: edition.id,
-      };
-      if (r.phase === Phase.PARADISO_R1) {
-        data.homeTeamId = shuffled[i * 2].id;
-        data.awayTeamId = shuffled[i * 2 + 1].id;
-      }
-      const m = await prisma.match.create({ data });
+      const m = await prisma.match.create({
+        data: {
+          code: `${r.codePrefix}-${i + 1}`,
+          phase: r.phase,
+          scheduledAt: scheduledAtFor(scheduleIdx++),
+          editionId: edition.id,
+        },
+      });
       byPhase[r.phase].push({ id: m.id, idx: i });
-      cursor = new Date(cursor.getTime() + step);
     }
   }
 
@@ -130,14 +175,13 @@ async function main() {
     // I quarti vengono sorteggiati manualmente dall'admin dopo che tutti
     // gli ottavi sono conclusi, e le 8 squadre vengono abbinate a mano.
   }
-  // SF pairing (cross bracket, come da tabellone ufficiale):
-  //   SF[0] = QF[0] winner vs QF[3] winner
-  //   SF[1] = QF[1] winner vs QF[2] winner
-  const qfToSf = [0, 1, 1, 0];
+  // SF pairing (bracket standard adiacente):
+  //   SF[0] = QF[0] winner vs QF[1] winner
+  //   SF[1] = QF[2] winner vs QF[3] winner
   for (let i = 0; i < 4; i++) {
     await prisma.match.update({
       where: { id: byPhase[Phase.PLAYOFF_QF][i].id },
-      data: { winnerNext: byPhase[Phase.PLAYOFF_SF][qfToSf[i]].id },
+      data: { winnerNext: byPhase[Phase.PLAYOFF_SF][Math.floor(i / 2)].id },
     });
   }
   for (let i = 0; i < 2; i++) {

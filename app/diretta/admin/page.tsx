@@ -4,6 +4,7 @@ import Link from "next/link";
 import { fmtTime, fmtDate, phaseLabel } from "@/lib/format";
 import { resolveEdition } from "@/lib/edition";
 import { QfPairingPanel } from "./QfPairingPanel";
+import { R1DrawPanel } from "./R1DrawPanel";
 
 export const dynamic = "force-dynamic";
 
@@ -24,6 +25,15 @@ export default async function AdminHome() {
     include: { homeTeam: true, awayTeam: true },
     orderBy: { scheduledAt: "asc" },
   }) : [];
+
+  // R1 draw panel: available at the start (when P.R1 has matches)
+  const p1 = matches.filter((m) => m.phase === "PARADISO_R1");
+  const p1AllScheduled = p1.every((m) => m.status === "SCHEDULED");
+  const showR1Draw = p1.length === 16 && p1AllScheduled;
+  const r1Teams = edition
+    ? await prisma.team.findMany({ where: { editionId: edition.id }, orderBy: { name: "asc" }, select: { id: true, name: true } })
+    : [];
+  const r1InitialPairs = p1.map((m) => ({ home: m.homeTeamId ?? "", away: m.awayTeamId ?? "" }));
 
   // QF pairing panel: available when all R16 are FINISHED
   const r16 = matches.filter((m) => m.phase === "PLAYOFF_R16");
@@ -48,6 +58,10 @@ export default async function AdminHome() {
         Edizione <span className="text-accent font-bold">{edition?.year ?? "—"}</span>. Clicca una partita per gestirla.
       </p>
 
+      {edition && showR1Draw && (
+        <R1DrawPanel editionId={edition.id} teams={r1Teams} initialPairs={r1InitialPairs} />
+      )}
+
       {edition && showQfPairing && (
         <QfPairingPanel editionId={edition.id} winners={r16WinnerTeams} alreadyAssigned={qfAssigned} />
       )}
@@ -64,12 +78,19 @@ export default async function AdminHome() {
                   `${fmtDate(m.scheduledAt)} ${fmtTime(m.scheduledAt)}`}
               </span>
             </div>
-            <div className="flex items-center justify-between">
-              <span className="truncate">{m.homeTeam?.name ?? "—"}</span>
-              <span className="font-bold tabular-nums">
-                {m.status === "SCHEDULED" ? "vs" : `${m.homeScore}-${m.awayScore}`}
-              </span>
-              <span className="truncate text-right">{m.awayTeam?.name ?? "—"}</span>
+            <div className="divide-y divide-white/5">
+              <div className="flex items-center justify-between py-1.5">
+                <span className="truncate font-semibold">{m.homeTeam?.name ?? "—"}</span>
+                {m.status !== "SCHEDULED" && (
+                  <span className="font-black tabular-nums shrink-0 ml-2">{m.homeScore}</span>
+                )}
+              </div>
+              <div className="flex items-center justify-between py-1.5">
+                <span className="truncate font-semibold">{m.awayTeam?.name ?? "—"}</span>
+                {m.status !== "SCHEDULED" && (
+                  <span className="font-black tabular-nums shrink-0 ml-2">{m.awayScore}</span>
+                )}
+              </div>
             </div>
           </Link>
         ))}
