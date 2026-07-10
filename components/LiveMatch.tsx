@@ -15,15 +15,15 @@ type Data = {
   goals: Goal[];
 };
 
-function TeamBlock({ name, score, goals }: { name?: string; score: number; goals: Goal[] }) {
+function TeamRow({ name, score, goals }: { name?: string; score: number; goals: Goal[] }) {
   return (
-    <div className="rounded-xl bg-black/30 border border-white/5 px-4 py-3">
+    <div className="py-3">
       <div className="flex items-center justify-between gap-3">
         <span className="font-extrabold text-lg truncate">{name ?? "—"}</span>
         <span className="text-3xl font-black tabular-nums shrink-0">{score}</span>
       </div>
       {goals.length > 0 && (
-        <div className="mt-2 pt-2 border-t border-white/5 space-y-0.5 text-sm text-white/70">
+        <div className="mt-1.5 space-y-0.5 text-sm text-white/70">
           {goals.map((g) => (
             <div key={g.id} className="truncate">⚽ {g.player?.name ?? "Gol"}</div>
           ))}
@@ -76,14 +76,15 @@ export function LiveMatch({ initialId }: { initialId: string }) {
 
   return (
     <>
-      <div className="card border-accent/40 space-y-3">
-        <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-white/60">
+      <div className="card border-accent/40">
+        <div className="flex items-center justify-between text-[11px] uppercase tracking-wider text-white/60 mb-2">
           <span className="truncate">{phaseLabel[data.phase] ?? data.phase} · {data.code}</span>
           <span className="chip text-live"><span className="live-dot" /> LIVE</span>
         </div>
-
-        <TeamBlock name={data.homeTeam?.name} score={data.homeScore} goals={homeGoals} />
-        <TeamBlock name={data.awayTeam?.name} score={data.awayScore} goals={awayGoals} />
+        <div className="divide-y divide-white/10">
+          <TeamRow name={data.homeTeam?.name} score={data.homeScore} goals={homeGoals} />
+          <TeamRow name={data.awayTeam?.name} score={data.awayScore} goals={awayGoals} />
+        </div>
       </div>
 
       {celebration && <GoalCelebration key={celebration.key} team={celebration.team} player={celebration.player} />}
