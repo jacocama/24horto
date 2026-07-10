@@ -42,13 +42,14 @@ export default async function Tabellone({ searchParams }: { searchParams: Promis
 
       {champion && <ChampionBanner name={champion.name} />}
 
-      <div className="grid grid-cols-3 gap-2 text-[10px] font-bold text-center">
-        <div className="rounded-lg py-1 bg-sky-400/15 text-sky-300 border border-sky-400/30">PARADISO</div>
-        <div className="rounded-lg py-1 bg-red-500/15 text-red-300 border border-red-500/30">INFERNO</div>
-        <div className="rounded-lg py-1 bg-accent/15 text-accent border border-accent/30">PLAYOFF</div>
+      <div className="sticky top-[110px] z-30 grid grid-cols-3 gap-2 text-[11px] font-bold text-center">
+        <a href="#paradiso" className="rounded-lg py-2 bg-sky-400/15 text-sky-300 border border-sky-400/30 hover:bg-sky-400/25 active:bg-sky-400/35 transition">PARADISO</a>
+        <a href="#inferno" className="rounded-lg py-2 bg-red-500/15 text-red-300 border border-red-500/30 hover:bg-red-500/25 active:bg-red-500/35 transition">INFERNO</a>
+        <a href="#playoff" className="rounded-lg py-2 bg-accent/15 text-accent border border-accent/30 hover:bg-accent/25 active:bg-accent/35 transition">PLAYOFF</a>
       </div>
 
       <BracketSection
+        id="paradiso"
         title="Paradiso"
         tint="sky"
         rounds={[
@@ -59,6 +60,7 @@ export default async function Tabellone({ searchParams }: { searchParams: Promis
       />
 
       <BracketSection
+        id="inferno"
         title="Inferno"
         tint="red"
         rounds={[
@@ -69,6 +71,7 @@ export default async function Tabellone({ searchParams }: { searchParams: Promis
       />
 
       <BracketSection
+        id="playoff"
         title="Playoff"
         tint="accent"
         rounds={[
@@ -93,9 +96,9 @@ function ChampionBanner({ name }: { name: string }) {
 }
 
 function BracketSection({
-  title, tint, rounds, note,
+  id, title, tint, rounds, note,
 }: {
-  title: string; tint: "sky" | "red" | "accent";
+  id?: string; title: string; tint: "sky" | "red" | "accent";
   rounds: { label: string; matches: Match[] }[]; note?: string;
 }) {
   const bg = tint === "sky" ? "bg-sky-400/5 border-sky-400/20" :
@@ -103,7 +106,7 @@ function BracketSection({
              "bg-accent/5 border-accent/20";
   const label = tint === "sky" ? "text-sky-300" : tint === "red" ? "text-red-300" : "text-accent";
   return (
-    <section className={`rounded-2xl border p-3 ${bg}`}>
+    <section id={id} className={`rounded-2xl border p-3 scroll-mt-40 ${bg}`}>
       <h2 className={`text-lg font-black uppercase tracking-wider ${label} mb-3`}>{title}</h2>
       <div className="space-y-4">
         {rounds.filter((r) => r.matches.length > 0).map((round) => (

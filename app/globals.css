@@ -76,6 +76,10 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+html {
+  scroll-behavior: smooth;
+}
+
 :root {
   color-scheme: dark;
   /* 24h Orto theme — background matches the logo canvas (#1a151e) */
