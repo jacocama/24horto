@@ -138,32 +138,39 @@ function BracketSection({
   );
 }
 
+function formatCode(code: string): string {
+  const [prefix, num] = code.split("-");
+  const map: Record<string, string> = {
+    P1: "P1", P2: "P2", I1: "I1", I2: "I2",
+    OTT: "O", QF: "Q", SF: "S", FIN: "F",
+  };
+  return `${map[prefix] ?? prefix}.${num}`;
+}
+
 function slotLabel(phase: string, idx: number, side: "home" | "away"): string {
+  const s = side === "home" ? 1 : 2;
   switch (phase) {
     case "PARADISO_R2":
-      return side === "home"
-        ? `Vincente P${idx * 2 + 1} Paradiso`
-        : `Vincente P${idx * 2 + 2} Paradiso`;
+      // home = vincente P1.(idx*2+1), away = vincente P1.(idx*2+2)
+      return `Vincente P1.${idx * 2 + s}`;
     case "INFERNO_R1":
-      return side === "home"
-        ? `Perdente P${idx * 2 + 1} Paradiso`
-        : `Perdente P${idx * 2 + 2} Paradiso`;
+      return `Perdente P1.${idx * 2 + s}`;
     case "INFERNO_R2":
+      // home = vincente I1.(idx+1), away = perdente P2.(idx^1 + 1)
       return side === "home"
-        ? `Vincente P${idx + 1} Inferno`
-        : `Perdente P${(idx ^ 1) + 1} Paradiso 2° turno`;
+        ? `Vincente I1.${idx + 1}`
+        : `Perdente P2.${(idx ^ 1) + 1}`;
     case "PLAYOFF_R16":
+      // home = vincente P2.(idx+1), away = vincente I2.(idx^2 + 1)
       return side === "home"
-        ? `P${idx + 1} Paradiso 2° turno`
-        : `P${(idx ^ 2) + 1} Inferno 2° turno`;
+        ? `Vincente P2.${idx + 1}`
+        : `Vincente I2.${(idx ^ 2) + 1}`;
     case "PLAYOFF_QF":
-      return `Sorteggio ottavi`;
+      return "Sorteggio";
     case "PLAYOFF_SF":
-      return side === "home"
-        ? `Vincente Quarto ${idx * 2 + 1}`
-        : `Vincente Quarto ${idx * 2 + 2}`;
+      return `Vincente Q.${idx * 2 + s}`;
     case "PLAYOFF_FINAL":
-      return side === "home" ? "Vincente Semifinale 1" : "Vincente Semifinale 2";
+      return side === "home" ? "Vincente S.1" : "Vincente S.2";
     default:
       return "Da definire";
   }
@@ -183,19 +190,24 @@ function BracketMatch({ m }: { m: Match }) {
   const clickable = !!m.homeTeam && !!m.awayTeam;
 
   const content = (
-    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-      <span className={`truncate ${homeWin ? "font-black text-white" : "text-white/70"}`}>
-        {m.homeTeam?.name ?? <span className="italic text-white/40 text-xs">{homePlaceholder}</span>}
-        {homePk && <span className="ml-1 text-[9px] font-bold text-accent">dcr</span>}
-      </span>
-      <span className={`tabular-nums font-bold ${m.status === "LIVE" ? "text-red-400" : "text-white/80"}`}>
-        {m.status === "SCHEDULED" ? "vs" : m.scoreUnknown ? "→" : `${m.homeScore}–${m.awayScore}`}
-      </span>
-      <span className={`truncate text-right ${awayWin ? "font-black text-white" : "text-white/70"}`}>
-        {awayPk && <span className="mr-1 text-[9px] font-bold text-accent">dcr</span>}
-        {m.awayTeam?.name ?? <span className="italic text-white/40 text-xs">{awayPlaceholder}</span>}
-      </span>
-    </div>
+    <>
+      <div className="text-[9px] font-bold uppercase tracking-widest text-white/40 mb-1">
+        {formatCode(m.code)}
+      </div>
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+        <span className={`truncate ${homeWin ? "font-black text-white" : "text-white/70"}`}>
+          {m.homeTeam?.name ?? <span className="italic text-white/40 text-xs">{homePlaceholder}</span>}
+          {homePk && <span className="ml-1 text-[9px] font-bold text-accent">dcr</span>}
+        </span>
+        <span className={`tabular-nums font-bold ${m.status === "LIVE" ? "text-red-400" : "text-white/80"}`}>
+          {m.status === "SCHEDULED" ? "vs" : m.scoreUnknown ? "→" : `${m.homeScore}–${m.awayScore}`}
+        </span>
+        <span className={`truncate text-right ${awayWin ? "font-black text-white" : "text-white/70"}`}>
+          {awayPk && <span className="mr-1 text-[9px] font-bold text-accent">dcr</span>}
+          {m.awayTeam?.name ?? <span className="italic text-white/40 text-xs">{awayPlaceholder}</span>}
+        </span>
+      </div>
+    </>
   );
 
   return clickable ? (
