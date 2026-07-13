@@ -26,9 +26,6 @@ function TeamRow({ team, score, winner, showScore, pkBadge, passBadge, scorers }
   return (
     <div className={`flex items-start justify-between gap-3 py-2 ${winner ? "text-white" : "text-white/80"}`}>
       <div className="flex items-start gap-2 min-w-0 flex-1">
-        <div className="w-6 h-6 rounded-full bg-white/10 grid place-items-center text-[10px] font-black shrink-0 mt-0.5">
-          {team?.name?.match(/\d+/)?.[0] ?? "?"}
-        </div>
         <div className="min-w-0 flex-1">
           <div className="flex items-center gap-2">
             <span className={`truncate ${winner ? "font-extrabold" : "font-semibold"}`}>
