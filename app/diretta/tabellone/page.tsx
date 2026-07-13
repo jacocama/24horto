@@ -47,9 +47,8 @@ export default async function Tabellone({ searchParams }: { searchParams: Promis
       <HowItWorks />
 
       {!r1Assigned && edition.isCurrent && (
-        <div className="rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3 text-center">
-          <div className="text-[10px] uppercase tracking-widest text-accent/70">🎲 Prossimo appuntamento</div>
-          <div className="mt-1 text-lg font-black text-accent">Sorteggi 15/07 ore 19:30</div>
+        <div className="rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3 text-center text-lg font-black text-accent">
+          🎲 Sorteggi 15/07 19:30
         </div>
       )}
 
