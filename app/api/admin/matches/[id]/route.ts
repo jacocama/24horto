@@ -16,12 +16,15 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   } else if (body.action === "end") {
     data.status = "FINISHED";
   } else if (body.action === "reset") {
+    // Cancella anche gol e MVP per riportare la partita allo stato iniziale
+    await prisma.goal.deleteMany({ where: { matchId: id } });
     data.status = "SCHEDULED";
     data.startedAt = null;
     data.penaltyWinnerId = null;
     data.scoreUnknown = false;
     data.homeScore = 0;
     data.awayScore = 0;
+    data.mvpId = null;
   } else if (body.action === "setPenaltyWinner") {
     data.penaltyWinnerId = body.teamId || null;
   } else if (body.action === "setMvp") {

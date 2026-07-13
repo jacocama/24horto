@@ -125,7 +125,7 @@ export function MatchEditor({ match }: { match: Match }) {
           )}
           {m.status === "LIVE" && (
             <>
-              <div className="chip text-destructive"><span className="live-dot" /> LIVE {t.half}T · {t.minute}'</div>
+              <div className="chip text-destructive"><span className="live-dot" /> LIVE</div>
               <button onClick={() => { if (confirm("Terminare la partita?")) call({ action: "end" }); }}
                 className="bg-destructive text-white font-black px-5 py-2 rounded-lg text-lg">
                 ■ END
@@ -176,7 +176,7 @@ export function MatchEditor({ match }: { match: Match }) {
                 return (
                   <button key={t!.id}
                     onClick={() => call({ action: "setPenaltyWinner", teamId: t!.id })}
-                    className={`rounded-lg px-3 py-2 font-bold text-sm transition ${
+                    className={`rounded-lg px-3 py-3 font-bold text-sm transition active:scale-95 active:bg-accent active:text-brand-bg ${
                       selected ? "bg-accent text-brand-bg" : "bg-white/5 hover:bg-white/15"
                     }`}>
                     {selected ? "✓ " : ""}{t!.name}
@@ -225,7 +225,7 @@ export function MatchEditor({ match }: { match: Match }) {
                   return (
                     <button key={p.id}
                       onClick={() => call({ action: "setMvp", playerId: selected ? null : p.id })}
-                      className={`w-full text-left rounded px-2 py-1.5 text-sm transition ${
+                      className={`w-full text-left rounded px-2 py-2 text-sm transition active:scale-95 active:bg-accent active:text-brand-bg ${
                         selected ? "bg-accent text-brand-bg font-bold" : "bg-white/5 hover:bg-white/15"
                       }`}>
                       {selected ? "⭐ " : ""}{p.name}
@@ -264,22 +264,44 @@ export function MatchEditor({ match }: { match: Match }) {
 }
 
 function TeamGoalPanel({ team, onPick }: { team: Team; onPick: (playerId: string | null) => void }) {
+  const [flashId, setFlashId] = useState<string | null>(null);
+
   if (!team) return <div className="card text-white/40 text-sm">—</div>;
   const players = team.players.filter((p) => !p.isCoach);
+
+  const trigger = (id: string, playerId: string | null) => {
+    setFlashId(id);
+    onPick(playerId);
+    // reset flash dopo l'animazione (viene ricreato al prossimo refresh comunque)
+    setTimeout(() => setFlashId(null), 700);
+  };
+
   return (
     <div className="card space-y-2">
       <div className="font-bold text-sm truncate">{team.name}</div>
       <div className="text-[10px] uppercase tracking-widest text-white/40">Tocca per +1 gol</div>
       <div className="grid grid-cols-1 gap-1.5">
-        {players.map((p) => (
-          <button key={p.id} onClick={() => onPick(p.id)}
-            className="text-left bg-white/5 hover:bg-accent hover:text-pitchDark rounded px-2 py-2 text-sm font-medium transition">
-            ⚽ {p.name}
-          </button>
-        ))}
-        <button onClick={() => onPick(null)}
-          className="text-left bg-white/5 hover:bg-white/15 rounded px-2 py-2 text-xs text-white/60 italic">
-          Gol senza marcatore
+        {players.map((p) => {
+          const flashing = flashId === p.id;
+          return (
+            <button key={p.id}
+              onClick={() => trigger(p.id, p.id)}
+              className={`text-left rounded px-2 py-2 text-sm font-medium transition active:scale-95 ${
+                flashing
+                  ? "bg-accent text-brand-bg scale-95"
+                  : "bg-white/5 hover:bg-accent hover:text-brand-bg"
+              }`}>
+              {flashing ? "✓" : "⚽"} {p.name}
+            </button>
+          );
+        })}
+        <button onClick={() => trigger("__nogoal", null)}
+          className={`text-left rounded px-2 py-2 text-xs italic transition active:scale-95 ${
+            flashId === "__nogoal"
+              ? "bg-accent text-brand-bg"
+              : "bg-white/5 hover:bg-white/15 text-white/60"
+          }`}>
+          {flashId === "__nogoal" ? "✓" : ""} Gol senza marcatore
         </button>
       </div>
     </div>

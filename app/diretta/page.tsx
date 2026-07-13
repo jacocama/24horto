@@ -1,6 +1,8 @@
 import { prisma } from "@/lib/prisma";
 import { MatchCard } from "@/components/MatchCard";
 import { LiveMatch } from "@/components/LiveMatch";
+import { ComingSoon } from "@/components/ComingSoon";
+import { ResultsList } from "@/components/ResultsList";
 import { resolveEdition } from "@/lib/edition";
 import { EditionBanner } from "@/components/EditionBanner";
 
@@ -44,7 +46,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ y
     prisma.match.findMany({
       where: { ...where, status: "SCHEDULED" },
       include: { homeTeam: true, awayTeam: true },
-      orderBy: { scheduledAt: "asc" }, take: 3,
+      orderBy: { scheduledAt: "asc" }, take: 1,
     }),
     prisma.match.findMany({
       where: { ...where, status: "FINISHED" },
@@ -53,9 +55,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ y
         mvp: { include: { team: true } },
         goals: { include: { player: true }, orderBy: { createdAt: "asc" } },
       },
-      orderBy: { scheduledAt: "desc" }, take: 3,
+      orderBy: { scheduledAt: "desc" }, take: 4,
     }),
   ]);
+  const initialResults = recent.slice(0, 3);
+  const initialHasMore = recent.length > 3;
 
   return (
     <div className="space-y-6">
@@ -69,11 +73,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ y
             ) : pendingPenalty && pendingPenalty.homeScore === pendingPenalty.awayScore ? (
               <LiveMatch initialId={pendingPenalty.id} mode="penalty" />
             ) : (
-              <div className="card text-center text-white/60">Nessuna partita in corso adesso.</div>
+              <ComingSoon match={upcoming[0] ? JSON.parse(JSON.stringify(upcoming[0])) : null} />
             )}
           </section>
           <section>
-            <h2 className="text-xs uppercase tracking-widest text-white/50 mb-2">Prossime partite</h2>
+            <h2 className="text-xs uppercase tracking-widest text-white/50 mb-2">Prossima partita</h2>
             <div className="space-y-4">
               {upcoming.length === 0 && <div className="card text-white/60">Nessuna partita in programma.</div>}
               {upcoming.map((m) => <MatchCard key={m.id} m={JSON.parse(JSON.stringify(m))} href={`/diretta/partite/${m.id}`} />)}
@@ -85,12 +89,13 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ y
         <h2 className="text-xs uppercase tracking-widest text-white/50 mb-2">
           {edition.isCurrent ? "Ultimi risultati" : "Risultati"}
         </h2>
-        <div className="space-y-4">
-          {recent.length === 0 && <div className="card text-white/60">Ancora nessun risultato.</div>}
-          {recent
-            .filter((m) => !(pendingPenalty && m.id === pendingPenalty.id && m.homeScore === m.awayScore))
-            .map((m) => <MatchCard key={m.id} m={JSON.parse(JSON.stringify(m))} href={`/diretta/partite/${m.id}`} />)}
-        </div>
+        <ResultsList
+          initial={JSON.parse(JSON.stringify(
+            initialResults.filter((m) => !(pendingPenalty && m.id === pendingPenalty.id && m.homeScore === m.awayScore))
+          ))}
+          initialHasMore={initialHasMore}
+          year={sp.year}
+        />
       </section>
     </div>
   );

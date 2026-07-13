@@ -10,12 +10,14 @@ export async function DELETE(_: Request, { params }: { params: Promise<{ id: str
   const goal = await prisma.goal.findUnique({ where: { id: goalId } });
   if (!goal) return NextResponse.json({ error: "not found" }, { status: 404 });
   await prisma.goal.delete({ where: { id: goalId } });
+
+  // Ricalcola il punteggio dai gol rimasti (evita punteggi negativi in caso di reset+delete)
+  const remaining = await prisma.goal.findMany({ where: { matchId: id } });
   const m = await prisma.match.findUnique({ where: { id } });
   if (m) {
-    const dec = goal.teamId === m.homeTeamId
-      ? { homeScore: { decrement: 1 } }
-      : { awayScore: { decrement: 1 } };
-    await prisma.match.update({ where: { id }, data: dec });
+    const homeScore = remaining.filter((g) => g.teamId === m.homeTeamId).length;
+    const awayScore = remaining.filter((g) => g.teamId === m.awayTeamId).length;
+    await prisma.match.update({ where: { id }, data: { homeScore, awayScore } });
   }
   return NextResponse.json({ ok: true });
 }
