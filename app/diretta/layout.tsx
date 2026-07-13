@@ -1,5 +1,17 @@
 import Link from "next/link";
+import type { Metadata } from "next";
 import { Providers } from "./providers";
+
+export const metadata: Metadata = {
+  title: "Diretta Orto — Torneo 24H",
+  description: "Diretta live del Torneo 24H: risultati, tabellone, marcatori e MVP",
+  icons: {
+    icon: [
+      { url: "/favicon-diretta.svg", type: "image/svg+xml" },
+    ],
+    apple: "/favicon-diretta.svg",
+  },
+};
 
 function Logo() {
   return (
