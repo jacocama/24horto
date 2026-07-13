@@ -73,7 +73,13 @@ async function main() {
   ];
 
   // Data d'inizio del torneo (sabato 18 luglio 2026 alle 09:00, editabile).
-  const startDate = new Date(process.env.TOURNAMENT_START || "2026-07-18T09:00:00");
+  // Calendario torneo: luglio 2026 (CEST/UTC+2)
+  // Ogni orario è espresso in ora locale Roma con offset esplicito così
+  // il risultato è indipendente dal timezone del server (locale o UTC).
+  const TZ_OFFSET = "+02:00";
+  const DAYS = ["2026-07-18", "2026-07-19"]; // sab, dom
+  const iso = (day: number, h: number, m: number) =>
+    new Date(`${DAYS[day]}T${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}:00${TZ_OFFSET}`);
 
   // Orari precisi delle 55 partite (offset dal giorno d'inizio: 0 = sabato, 1 = domenica)
   const SCHEDULE: { d: number; h: number; m: number }[] = [
@@ -112,10 +118,7 @@ async function main() {
 
   const scheduledAtFor = (i: number): Date => {
     const s = SCHEDULE[i];
-    const d = new Date(startDate);
-    d.setDate(d.getDate() + s.d);
-    d.setHours(s.h, s.m, 0, 0);
-    return d;
+    return iso(s.d, s.h, s.m);
   };
 
   const byPhase: Record<string, { id: string; idx: number }[]> = {};

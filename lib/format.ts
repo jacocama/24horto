@@ -1,10 +1,12 @@
+const TZ = "Europe/Rome";
+
 export function fmtTime(d: Date | string) {
   const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" });
+  return date.toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit", timeZone: TZ });
 }
 export function fmtDate(d: Date | string) {
   const date = typeof d === "string" ? new Date(d) : d;
-  return date.toLocaleDateString("it-IT", { weekday: "short", day: "2-digit", month: "short" });
+  return date.toLocaleDateString("it-IT", { weekday: "short", day: "2-digit", month: "short", timeZone: TZ });
 }
 export const phaseLabel: Record<string, string> = {
   PARADISO_R1: "Paradiso · 1° Turno",
