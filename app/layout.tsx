@@ -20,21 +20,8 @@ export const metadata: Metadata = {
     'Torneo 24h Orto, ventunesima edizione. 18/19 luglio 2026. You can be hero just for one day.',
   generator: 'v0.app',
   icons: {
-    icon: [
-      {
-        url: '/icon-light-32x32.png',
-        media: '(prefers-color-scheme: light)',
-      },
-      {
-        url: '/icon-dark-32x32.png',
-        media: '(prefers-color-scheme: dark)',
-      },
-      {
-        url: '/icon.svg',
-        type: 'image/svg+xml',
-      },
-    ],
-    apple: '/apple-icon.png',
+    icon: '/logo-24ore.png',
+    apple: '/logo-24ore.png',
   },
 }
 

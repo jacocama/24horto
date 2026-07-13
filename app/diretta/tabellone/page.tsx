@@ -37,6 +37,7 @@ export default async function Tabellone({ searchParams }: { searchParams: Promis
   const byPhase = (p: string) => matches.filter((m) => m.phase === p) as unknown as Match[];
   const finale = byPhase("PLAYOFF_FINAL")[0];
   const champion = finale ? winnerTeam(finale) : null;
+  const r1Assigned = byPhase("PARADISO_R1").some((m) => m.homeTeamId);
 
   return (
     <div className="space-y-6">
@@ -44,6 +45,13 @@ export default async function Tabellone({ searchParams }: { searchParams: Promis
       <h1 className="text-2xl font-black">Tabellone</h1>
 
       <HowItWorks />
+
+      {!r1Assigned && edition.isCurrent && (
+        <div className="rounded-2xl border border-accent/40 bg-accent/10 px-4 py-3 text-center">
+          <div className="text-[10px] uppercase tracking-widest text-accent/70">🎲 Prossimo appuntamento</div>
+          <div className="mt-1 text-lg font-black text-accent">Sorteggi 15/07 ore 19:30</div>
+        </div>
+      )}
 
       {champion && <ChampionBanner name={champion.name} />}
 

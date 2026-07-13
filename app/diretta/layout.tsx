@@ -6,10 +6,8 @@ export const metadata: Metadata = {
   title: "Diretta Orto — Torneo 24H",
   description: "Diretta live del Torneo 24H: risultati, tabellone, marcatori e MVP",
   icons: {
-    icon: [
-      { url: "/favicon-diretta.svg", type: "image/svg+xml" },
-    ],
-    apple: "/favicon-diretta.svg",
+    icon: "/logo-24ore.png",
+    apple: "/logo-24ore.png",
   },
 };
 

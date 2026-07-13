@@ -21,7 +21,8 @@ export default async function Squadre({ searchParams }: { searchParams: Promise<
       <h1 className="text-2xl font-black">Squadre</h1>
       <div className="grid grid-cols-2 gap-3">
         {teams.map((t) => (
-          <Link key={t.id} href={`/diretta/squadre/${t.id}`} className="card hover:border-accent/50">
+          <Link key={t.id} href={`/diretta/squadre/${t.id}`}
+            className="card hover:border-accent/50 active:scale-95 active:bg-accent/20 active:border-accent transition">
             <div className="font-bold">{t.name}</div>
             <div className="text-xs text-white/50">{t._count.players} tesserati</div>
           </Link>

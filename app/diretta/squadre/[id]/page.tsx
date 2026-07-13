@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { MatchCard } from "@/components/MatchCard";
 
 export const dynamic = "force-dynamic";
@@ -36,6 +37,10 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
 
   return (
     <div className="space-y-5">
+      <Link href="/diretta/squadre"
+        className="inline-flex items-center gap-1 text-xs uppercase tracking-widest text-white/60 hover:text-white transition">
+        ← Tutte le squadre
+      </Link>
       <div>
         <h1 className="text-2xl font-black">{team.name}</h1>
       </div>
