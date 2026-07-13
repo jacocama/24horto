@@ -109,18 +109,64 @@ function BracketSection({
     <section id={id} className={`rounded-2xl border p-3 scroll-mt-40 ${bg}`}>
       <h2 className={`text-lg font-black uppercase tracking-wider ${label} mb-3`}>{title}</h2>
       <div className="space-y-4">
-        {rounds.filter((r) => r.matches.length > 0).map((round) => (
-          <div key={round.label}>
-            <div className="text-[10px] uppercase tracking-widest text-white/50 mb-1.5">{round.label}</div>
-            <div className="grid gap-1.5">
-              {round.matches.map((m) => <BracketMatch key={m.id} m={m} />)}
+        {rounds.filter((r) => r.matches.length > 0).map((round, i) => {
+          const nextLabel = rounds.filter((r) => r.matches.length > 0)[i + 1]?.label;
+          // Divisore SORTEGGIO tra Ottavi e Quarti (solo nella sezione Playoff)
+          const showSorteggio =
+            round.label === "Ottavi" && nextLabel === "Quarti";
+          return (
+            <div key={round.label} className="space-y-4">
+              <div>
+                <div className="text-[10px] uppercase tracking-widest text-white/50 mb-1.5">{round.label}</div>
+                <div className="grid gap-1.5">
+                  {round.matches.map((m) => <BracketMatch key={m.id} m={m} />)}
+                </div>
+              </div>
+              {showSorteggio && (
+                <div className="flex items-center gap-2 text-accent">
+                  <div className="flex-1 border-t border-accent/40" />
+                  <span className="text-[10px] font-black uppercase tracking-[0.25em]">🎲 Sorteggio</span>
+                  <div className="flex-1 border-t border-accent/40" />
+                </div>
+              )}
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
       {note && <p className="mt-3 text-[10px] text-white/40 leading-relaxed">{note}</p>}
     </section>
   );
+}
+
+function slotLabel(phase: string, idx: number, side: "home" | "away"): string {
+  switch (phase) {
+    case "PARADISO_R2":
+      return side === "home"
+        ? `Vincente P${idx * 2 + 1} Paradiso`
+        : `Vincente P${idx * 2 + 2} Paradiso`;
+    case "INFERNO_R1":
+      return side === "home"
+        ? `Perdente P${idx * 2 + 1} Paradiso`
+        : `Perdente P${idx * 2 + 2} Paradiso`;
+    case "INFERNO_R2":
+      return side === "home"
+        ? `Vincente P${idx + 1} Inferno`
+        : `Perdente P${(idx ^ 1) + 1} Paradiso 2° turno`;
+    case "PLAYOFF_R16":
+      return side === "home"
+        ? `P${idx + 1} Paradiso 2° turno`
+        : `P${(idx ^ 2) + 1} Inferno 2° turno`;
+    case "PLAYOFF_QF":
+      return `Sorteggio ottavi`;
+    case "PLAYOFF_SF":
+      return side === "home"
+        ? `Vincente Quarto ${idx * 2 + 1}`
+        : `Vincente Quarto ${idx * 2 + 2}`;
+    case "PLAYOFF_FINAL":
+      return side === "home" ? "Vincente Semifinale 1" : "Vincente Semifinale 2";
+    default:
+      return "Da definire";
+  }
 }
 
 function BracketMatch({ m }: { m: Match }) {
@@ -131,23 +177,36 @@ function BracketMatch({ m }: { m: Match }) {
   const draw = finished && m.homeScore === m.awayScore;
   const homePk = draw && m.penaltyWinnerId === m.homeTeamId;
   const awayPk = draw && m.penaltyWinnerId === m.awayTeamId;
-  return (
+  const idx = Number((m.code.split("-")[1] ?? "1")) - 1;
+  const homePlaceholder = slotLabel(m.phase, idx, "home");
+  const awayPlaceholder = slotLabel(m.phase, idx, "away");
+  const clickable = !!m.homeTeam && !!m.awayTeam;
+
+  const content = (
+    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
+      <span className={`truncate ${homeWin ? "font-black text-white" : "text-white/70"}`}>
+        {m.homeTeam?.name ?? <span className="italic text-white/40 text-xs">{homePlaceholder}</span>}
+        {homePk && <span className="ml-1 text-[9px] font-bold text-accent">dcr</span>}
+      </span>
+      <span className={`tabular-nums font-bold ${m.status === "LIVE" ? "text-red-400" : "text-white/80"}`}>
+        {m.status === "SCHEDULED" ? "vs" : m.scoreUnknown ? "→" : `${m.homeScore}–${m.awayScore}`}
+      </span>
+      <span className={`truncate text-right ${awayWin ? "font-black text-white" : "text-white/70"}`}>
+        {awayPk && <span className="mr-1 text-[9px] font-bold text-accent">dcr</span>}
+        {m.awayTeam?.name ?? <span className="italic text-white/40 text-xs">{awayPlaceholder}</span>}
+      </span>
+    </div>
+  );
+
+  return clickable ? (
     <Link href={`/diretta/partite/${m.id}`}
       className="rounded-lg bg-white/5 hover:bg-white/10 px-3 py-2 text-sm block">
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
-        <span className={`truncate ${homeWin ? "font-black text-white" : "text-white/70"}`}>
-          {m.homeTeam?.name ?? <span className="italic text-white/40">Da definire</span>}
-          {homePk && <span className="ml-1 text-[9px] font-bold text-accent">dcr</span>}
-        </span>
-        <span className={`tabular-nums font-bold ${m.status === "LIVE" ? "text-red-400" : "text-white/80"}`}>
-          {m.status === "SCHEDULED" ? "vs" : m.scoreUnknown ? "→" : `${m.homeScore}–${m.awayScore}`}
-        </span>
-        <span className={`truncate text-right ${awayWin ? "font-black text-white" : "text-white/70"}`}>
-          {awayPk && <span className="mr-1 text-[9px] font-bold text-accent">dcr</span>}
-          {m.awayTeam?.name ?? <span className="italic text-white/40">Da definire</span>}
-        </span>
-      </div>
+      {content}
     </Link>
+  ) : (
+    <div className="rounded-lg bg-white/5 px-3 py-2 text-sm">
+      {content}
+    </div>
   );
 }
 
