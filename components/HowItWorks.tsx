@@ -37,6 +37,29 @@ export function HowItWorks() {
               fino alla <b>Finale</b>.
             </p>
           </div>
+          <div>
+            <div className="text-white font-black uppercase tracking-wider text-xs mb-1">Come leggere i codici</div>
+            <p className="mb-2">
+              Ogni partita ha un codice del tipo <b>[lettera].[numero]</b>. La lettera indica <b>fase e turno</b>,
+              il numero indica <b>quale partita</b> di quel turno.
+            </p>
+            <ul className="grid grid-cols-2 gap-x-3 gap-y-0.5 text-xs">
+              <li><b className="text-sky-300">P1.x</b> — Paradiso 1° turno</li>
+              <li><b className="text-sky-300">P2.x</b> — Paradiso 2° turno</li>
+              <li><b className="text-red-300">I1.x</b> — Inferno 1° turno</li>
+              <li><b className="text-red-300">I2.x</b> — Inferno 2° turno</li>
+              <li><b className="text-accent">O.x</b> — Ottavi</li>
+              <li><b className="text-accent">Q.x</b> — Quarti</li>
+              <li><b className="text-accent">S.x</b> — Semifinali</li>
+              <li><b className="text-accent">F.1</b> — Finale</li>
+            </ul>
+            <p className="mt-2 text-xs">
+              Se al posto di una squadra vedi <i>"Vincente P1.3"</i> significa che quello slot sarà occupato
+              dalla vincitrice della partita <b>P1.3</b>. Stessa cosa con <i>"Perdente P1.4"</i> nell'Inferno.
+              Così puoi seguire già dal tabellone tutti i <b>possibili accoppiamenti</b> anche prima che le
+              partite vengano giocate.
+            </p>
+          </div>
         </div>
       )}
     </div>
