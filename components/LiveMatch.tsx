@@ -33,7 +33,7 @@ function TeamRow({ name, score, goals }: { name?: string; score: number; goals: 
   );
 }
 
-export function LiveMatch({ initialId }: { initialId: string }) {
+export function LiveMatch({ initialId, mode = "live" }: { initialId: string; mode?: "live" | "penalty" }) {
   const [data, setData] = useState<Data | null>(null);
   const [celebration, setCelebration] = useState<{ team: string; player: string | null; key: number } | null>(null);
   const lastGoalIdsRef = useRef<Set<string> | null>(null);
@@ -85,6 +85,11 @@ export function LiveMatch({ initialId }: { initialId: string }) {
           <TeamRow name={data.homeTeam?.name} score={data.homeScore} goals={homeGoals} />
           <TeamRow name={data.awayTeam?.name} score={data.awayScore} goals={awayGoals} />
         </div>
+        {mode === "penalty" && (
+          <div className="mt-3 pt-3 border-t border-white/10 text-center text-sm text-accent font-black uppercase tracking-wider">
+            🥅&nbsp;&nbsp;&nbsp;Calci di rigore
+          </div>
+        )}
       </div>
 
       {celebration && <GoalCelebration key={celebration.key} team={celebration.team} player={celebration.player} />}
