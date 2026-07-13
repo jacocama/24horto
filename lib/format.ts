@@ -8,6 +8,10 @@ export function fmtDate(d: Date | string) {
   const date = typeof d === "string" ? new Date(d) : d;
   return date.toLocaleDateString("it-IT", { weekday: "short", day: "2-digit", month: "short", timeZone: TZ });
 }
+export function fmtDayShort(d: Date | string) {
+  const date = typeof d === "string" ? new Date(d) : d;
+  return date.toLocaleDateString("it-IT", { day: "2-digit", month: "2-digit", timeZone: TZ });
+}
 export const phaseLabel: Record<string, string> = {
   PARADISO_R1: "Paradiso · 1° Turno",
   PARADISO_R2: "Paradiso · 2° Turno",

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { resolveEdition } from "@/lib/edition";
 import { EditionBanner } from "@/components/EditionBanner";
 import { HowItWorks } from "@/components/HowItWorks";
+import { fmtTime, fmtDayShort } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
 
@@ -11,6 +12,7 @@ type Match = {
   code: string;
   phase: string;
   status: string;
+  scheduledAt: string | Date;
   homeTeamId: string | null;
   awayTeamId: string | null;
   homeScore: number;
@@ -194,8 +196,9 @@ function BracketMatch({ m }: { m: Match }) {
 
   const content = (
     <>
-      <div className="text-[9px] font-bold uppercase tracking-widest text-white/40 mb-1">
-        {formatCode(m.code)}
+      <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest text-white/40 mb-1">
+        <span>{formatCode(m.code)}</span>
+        <span>{fmtDayShort(m.scheduledAt)} · {fmtTime(m.scheduledAt)}</span>
       </div>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <span className={`truncate ${homeWin ? "font-black text-white" : "text-white/70"}`}>
