@@ -2,6 +2,7 @@ import { prisma } from "@/lib/prisma";
 import Link from "next/link";
 import { resolveEdition } from "@/lib/edition";
 import { EditionBanner } from "@/components/EditionBanner";
+import { HowItWorks } from "@/components/HowItWorks";
 
 export const dynamic = "force-dynamic";
 
@@ -39,6 +40,8 @@ export default async function Tabellone({ searchParams }: { searchParams: Promis
     <div className="space-y-6">
       <EditionBanner edition={edition} />
       <h1 className="text-2xl font-black">Tabellone</h1>
+
+      <HowItWorks />
 
       {champion && <ChampionBanner name={champion.name} />}
 
