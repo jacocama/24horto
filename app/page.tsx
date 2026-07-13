@@ -1,4 +1,5 @@
 import Image from "next/image"
+import Link from "next/link"
 import { Countdown } from "@/components/countdown"
 import { FloatingWinners } from "@/components/floating-winners"
 
@@ -77,6 +78,17 @@ export default function Page() {
         {/* Countdown */}
         <div className="mt-8 w-full sm:mt-12">
           <Countdown />
+        </div>
+
+        {/* Link Albo d'oro */}
+        <div className="mt-8 flex items-center gap-3 text-xs uppercase tracking-widest">
+          <Link href="/albo-doro" className="text-primary hover:underline">
+            🏆 Albo d&apos;oro
+          </Link>
+          <span className="text-muted-foreground/40">·</span>
+          <Link href="/diretta" className="text-primary hover:underline">
+            Diretta live →
+          </Link>
         </div>
       </div>
     </main>
