@@ -46,7 +46,7 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ y
     prisma.match.findMany({
       where: { ...where, status: "SCHEDULED" },
       include: { homeTeam: true, awayTeam: true },
-      orderBy: { scheduledAt: "asc" }, take: 1,
+      orderBy: { scheduledAt: "asc" }, take: 2,
     }),
     prisma.match.findMany({
       where: { ...where, status: "FINISHED" },
@@ -60,6 +60,11 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ y
   ]);
   const initialResults = recent.slice(0, 3);
   const initialHasMore = recent.length > 3;
+
+  // Se il "In corso" mostra la Coming Soon (nessun live/rigori), consumiamo
+  // upcoming[0] lì; "Prossima partita" mostra upcoming[1].
+  const hasLiveOrPenalty = !!live || !!(pendingPenalty && pendingPenalty.homeScore === pendingPenalty.awayScore);
+  const nextMatches = hasLiveOrPenalty ? upcoming.slice(0, 1) : upcoming.slice(1, 2);
 
   return (
     <div className="space-y-6">
@@ -79,8 +84,8 @@ export default async function Home({ searchParams }: { searchParams: Promise<{ y
           <section>
             <h2 className="text-xs uppercase tracking-widest text-white/50 mb-2">Prossima partita</h2>
             <div className="space-y-4">
-              {upcoming.length === 0 && <div className="card text-white/60">Nessuna partita in programma.</div>}
-              {upcoming.map((m) => <MatchCard key={m.id} m={JSON.parse(JSON.stringify(m))} href={`/diretta/partite/${m.id}`} />)}
+              {nextMatches.length === 0 && <div className="card text-white/60">Nessuna partita in programma.</div>}
+              {nextMatches.map((m) => <MatchCard key={m.id} m={JSON.parse(JSON.stringify(m))} href={`/diretta/partite/${m.id}`} />)}
             </div>
           </section>
         </>

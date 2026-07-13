@@ -193,13 +193,6 @@ export function MatchEditor({ match }: { match: Match }) {
           </div>
         )}
 
-        {/* Schedule */}
-        <label className="block text-sm text-center text-white/70">
-          Orario:
-          <input type="datetime-local" defaultValue={m.scheduledAt.slice(0, 16)}
-            onBlur={(e) => call({ scheduledAt: new Date(e.target.value).toISOString() })}
-            className="ml-2 bg-black/40 rounded px-2 py-1 border border-white/10 text-white" />
-        </label>
       </div>
 
       {/* Goal entry: click a player */}

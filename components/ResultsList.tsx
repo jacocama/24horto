@@ -18,6 +18,19 @@ export function ResultsList({
   const [loading, setLoading] = useState(false);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
+  // Quando il server re-renderizza (router.refresh) con nuovi risultati in cima,
+  // prependiamo le partite nuove senza perdere quelle già caricate dallo scroll.
+  useEffect(() => {
+    setItems((cur) => {
+      const known = new Set(cur.map((m) => m.id));
+      const toPrepend = initial.filter((m) => !known.has(m.id));
+      return toPrepend.length ? [...toPrepend, ...cur] : cur;
+    });
+    // se non abbiamo ancora caricato altre pagine, aggiorna anche hasMore
+    setHasMore((cur) => (cur ? cur : initialHasMore));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [initial]);
+
   const loadMore = useCallback(async () => {
     if (loading || !hasMore) return;
     setLoading(true);
