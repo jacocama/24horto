@@ -4,14 +4,11 @@ import { useState } from "react";
 export function HowItWorks() {
   const [open, setOpen] = useState(false);
   return (
-    <div className="rounded-2xl border border-accent/40 bg-accent/10 overflow-hidden">
+    <div className="rounded-2xl border border-accent/25 bg-accent/5 overflow-hidden">
       <button onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-3 py-2.5 text-xs font-black uppercase tracking-widest text-accent hover:bg-accent/15 transition">
-        <span className="flex items-center gap-2">
-          <span className="inline-block w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-          Come funziona il torneo?
-        </span>
-        <span className="text-accent/70">{open ? "▲" : "▼"}</span>
+        className="w-full flex items-center justify-between px-3 py-2 text-[11px] font-black uppercase tracking-widest text-accent/85 hover:bg-accent/10 transition">
+        <span>Come funziona?</span>
+        <span className="text-accent/60 text-xs">{open ? "▲" : "▼"}</span>
       </button>
       {open && (
         <div className="px-4 pb-4 space-y-4 text-sm text-white/70">
