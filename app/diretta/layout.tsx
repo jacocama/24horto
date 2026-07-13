@@ -33,6 +33,7 @@ export default function DirettaLayout({ children }: { children: React.ReactNode 
           <Link href="/diretta"><Logo /></Link>
           <div className="flex items-center gap-3 text-xs">
             <Link href="/" className="text-white/50 hover:text-white">← Home</Link>
+            <Link href="/albo-doro" className="text-white/50 hover:text-white">Albo d'oro</Link>
             <Link href="/diretta/admin" className="text-white/50 hover:text-white">Admin</Link>
           </div>
         </div>
@@ -43,7 +44,6 @@ export default function DirettaLayout({ children }: { children: React.ReactNode 
             { href: "/diretta/tabellone", label: "Tabellone" },
             { href: "/diretta/squadre", label: "Squadre" },
             { href: "/diretta/marcatori", label: "Marcatori" },
-            { href: "/diretta/storico", label: "Storico" },
           ].map((l) => (
             <Link key={l.href} href={l.href}
               className="px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 whitespace-nowrap">
