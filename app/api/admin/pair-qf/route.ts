@@ -20,7 +20,7 @@ export async function POST(req: Request) {
   // Validate: all 8 teams are winners of R16 matches in this edition
   const r16 = await prisma.match.findMany({
     where: { editionId, phase: "PLAYOFF_R16", status: "FINISHED" },
-    orderBy: { code: "asc" },
+    orderBy: { scheduledAt: "asc" },
   });
   if (r16.length !== 8) {
     return NextResponse.json({ error: "Non tutti gli ottavi sono conclusi" }, { status: 400 });
@@ -42,7 +42,7 @@ export async function POST(req: Request) {
 
   const qfMatches = await prisma.match.findMany({
     where: { editionId, phase: "PLAYOFF_QF" },
-    orderBy: { code: "asc" },
+    orderBy: { scheduledAt: "asc" },
   });
   if (qfMatches.length !== 4) {
     return NextResponse.json({ error: `Aspetto 4 partite di quarti, trovate ${qfMatches.length}` }, { status: 400 });

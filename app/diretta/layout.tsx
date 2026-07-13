@@ -7,7 +7,7 @@ function Logo() {
       <img src="/logo-diretta.svg" alt="Diretta Orto" className="w-9 h-9" />
       <div className="leading-tight">
         <div className="font-black text-lg tracking-wide">DIRETTA <span className="text-accent">ORTO</span></div>
-        <div className="text-[10px] uppercase tracking-widest text-white/60">Torneo di Calcetto</div>
+        <div className="text-[10px] uppercase tracking-widest text-white/60">Torneo 24H</div>
       </div>
     </div>
   );

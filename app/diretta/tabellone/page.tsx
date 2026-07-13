@@ -28,7 +28,7 @@ export default async function Tabellone({ searchParams }: { searchParams: Promis
   const matches = await prisma.match.findMany({
     where: { editionId: edition.id },
     include: { homeTeam: true, awayTeam: true },
-    orderBy: [{ phase: "asc" }, { code: "asc" }],
+    orderBy: [{ phase: "asc" }, { scheduledAt: "asc" }],
   });
 
   const byPhase = (p: string) => matches.filter((m) => m.phase === p) as unknown as Match[];

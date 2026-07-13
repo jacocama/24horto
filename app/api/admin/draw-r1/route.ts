@@ -32,7 +32,7 @@ export async function POST(req: Request) {
 
   const p1 = await prisma.match.findMany({
     where: { editionId, phase: "PARADISO_R1" },
-    orderBy: { code: "asc" },
+    orderBy: { scheduledAt: "asc" },
   });
   if (p1.length !== 16) {
     return NextResponse.json({ error: `Aspetto 16 partite di P.R1, trovate ${p1.length}` }, { status: 400 });
