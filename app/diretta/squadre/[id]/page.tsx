@@ -37,7 +37,6 @@ export default async function TeamPage({ params }: { params: Promise<{ id: strin
   return (
     <div className="space-y-5">
       <div>
-        <div className="text-[10px] uppercase tracking-widest text-white/40">Seed #{team.seed}</div>
         <h1 className="text-2xl font-black">{team.name}</h1>
       </div>
       <div className="card">

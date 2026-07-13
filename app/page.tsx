@@ -86,8 +86,8 @@ export default function Page() {
             🏆 Albo d&apos;oro
           </Link>
           <span className="text-muted-foreground/40">·</span>
-          <Link href="/diretta" className="text-primary hover:underline">
-            Diretta live →
+          <Link href="/diretta/squadre" className="text-primary hover:underline">
+            Scopri le squadre →
           </Link>
         </div>
       </div>
