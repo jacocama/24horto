@@ -13,6 +13,7 @@ type Match = {
   phase: string;
   status: string;
   scheduledAt: string | Date;
+  originalScheduledAt: string | Date | null;
   homeTeamId: string | null;
   awayTeamId: string | null;
   homeScore: number;
@@ -31,7 +32,7 @@ export default async function Tabellone({ searchParams }: { searchParams: Promis
   const matches = await prisma.match.findMany({
     where: { editionId: edition.id },
     include: { homeTeam: true, awayTeam: true },
-    orderBy: [{ phase: "asc" }, { scheduledAt: "asc" }],
+    orderBy: [{ phase: "asc" }, { originalScheduledAt: "asc" }, { scheduledAt: "asc" }],
   });
 
   const byPhase = (p: string) => matches.filter((m) => m.phase === p) as unknown as Match[];
@@ -94,6 +95,7 @@ export default async function Tabellone({ searchParams }: { searchParams: Promis
         ]}
         note="16 qualificate: 8 dal Paradiso + 8 dall'Inferno. Accoppiamenti secondo il tabellone ufficiale."
       />
+
     </div>
   );
 }
@@ -145,6 +147,11 @@ function BracketSection({
           );
         })}
       </div>
+      {rounds.some((r) => r.matches.some((m) => m.originalScheduledAt && new Date(m.scheduledAt).getTime() !== new Date(m.originalScheduledAt).getTime())) && (
+        <p className="mt-3 text-[10px] text-accent/80 leading-relaxed">
+          <span className="font-bold">*</span> Orario spostato rispetto al tabellone originale
+        </p>
+      )}
       {note && <p className="mt-3 text-[10px] text-white/40 leading-relaxed">{note}</p>}
     </section>
   );
@@ -200,12 +207,17 @@ function BracketMatch({ m }: { m: Match }) {
   const homePlaceholder = slotLabel(m.phase, idx, "home");
   const awayPlaceholder = slotLabel(m.phase, idx, "away");
   const clickable = !!m.homeTeam && !!m.awayTeam;
+  const moved = m.originalScheduledAt &&
+    new Date(m.scheduledAt).getTime() !== new Date(m.originalScheduledAt).getTime();
 
   const content = (
     <>
       <div className="flex items-center justify-between text-[9px] font-bold uppercase tracking-widest text-white/40 mb-1">
         <span>{formatCode(m.code)}</span>
-        <span>{fmtDayShort(m.scheduledAt)} · {fmtTime(m.scheduledAt)}</span>
+        <span className={moved ? "text-accent" : ""}>
+          {moved && <span aria-label="orario spostato">* </span>}
+          {fmtDayShort(m.scheduledAt)} · {fmtTime(m.scheduledAt)}
+        </span>
       </div>
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2">
         <span className={`truncate ${homeWin ? "font-black text-white" : "text-white/70"}`}>

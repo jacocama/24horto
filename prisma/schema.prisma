@@ -71,6 +71,7 @@ model Match {
   code            String
   phase           Phase
   scheduledAt     DateTime
+  originalScheduledAt DateTime?
   status          MatchStatus @default(SCHEDULED)
   homeTeam        Team?       @relation("home", fields: [homeTeamId], references: [id])
   homeTeamId      String?
