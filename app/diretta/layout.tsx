@@ -44,7 +44,7 @@ export default function DirettaLayout({ children }: { children: React.ReactNode 
             { href: "/diretta/marcatori", label: "Marcatori" },
           ].map((l) => (
             <Link key={l.href} href={l.href}
-              className="px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 whitespace-nowrap">
+              className="px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 active:bg-accent/30 active:scale-95 whitespace-nowrap transition">
               {l.label}
             </Link>
           ))}

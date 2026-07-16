@@ -6,7 +6,7 @@ export function HowItWorks() {
   return (
     <div className="rounded-2xl border border-accent/25 bg-accent/5 overflow-hidden">
       <button onClick={() => setOpen((v) => !v)}
-        className="w-full flex items-center justify-between px-3 py-2 text-[11px] font-black uppercase tracking-widest text-accent/85 hover:bg-accent/10 transition">
+        className="w-full flex items-center justify-between px-3 py-2 text-[11px] font-black uppercase tracking-widest text-accent/85 hover:bg-accent/10 active:bg-accent/20 cursor-pointer transition">
         <span>Come funziona?</span>
         <span className="text-accent/60 text-xs">{open ? "▲" : "▼"}</span>
       </button>

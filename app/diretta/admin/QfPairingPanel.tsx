@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useConfirm } from "@/components/confirm-dialog";
 
 type Team = { id: string; name: string };
 
@@ -15,6 +16,7 @@ export function QfPairingPanel({
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
+  const confirmDialog = useConfirm();
   const [pairs, setPairs] = useState<{ home: string; away: string }[]>([
     { home: "", away: "" },
     { home: "", away: "" },
@@ -31,9 +33,14 @@ export function QfPairingPanel({
   const remaining = winners.filter((w) => !used.has(w.id));
   const canSubmit = pairs.every((p) => p.home && p.away) && new Set(pairs.flatMap((p) => [p.home, p.away])).size === 8;
 
-  const submit = () => {
+  const submit = async () => {
     if (!canSubmit) return;
-    if (alreadyAssigned && !confirm("I quarti sono già assegnati. Vuoi sovrascriverli?")) return;
+    if (alreadyAssigned && !(await confirmDialog({
+      title: "Sovrascrivi quarti",
+      message: "I quarti sono già assegnati. Vuoi sovrascriverli?",
+      confirmLabel: "Sovrascrivi",
+      danger: true,
+    }))) return;
     start(async () => {
       const r = await fetch("/api/admin/pair-qf", {
         method: "POST",

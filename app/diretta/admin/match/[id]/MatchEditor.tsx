@@ -3,6 +3,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState, useTransition } from "react";
 import { phaseLabel } from "@/lib/format";
 import { computeMatchTime } from "@/lib/matchTime";
+import { useConfirm } from "@/components/confirm-dialog";
 
 type Player = { id: string; name: string; isCoach: boolean };
 type Team = { id: string; name: string; players: Player[] } | null;
@@ -23,6 +24,7 @@ export function MatchEditor({ match }: { match: Match }) {
   const [pending, start] = useTransition();
   const [m, setM] = useState(match);
   const [tick, setTick] = useState(0);
+  const confirmDialog = useConfirm();
 
   // tick every second so live minute updates
   useEffect(() => {
@@ -126,7 +128,10 @@ export function MatchEditor({ match }: { match: Match }) {
           {m.status === "LIVE" && (
             <>
               <div className="chip text-destructive"><span className="live-dot" /> LIVE</div>
-              <button onClick={() => { if (confirm("Terminare la partita?")) call({ action: "end" }); }}
+              <button onClick={async () => {
+                  if (await confirmDialog({ title: "Termina partita", message: "Terminare la partita?", confirmLabel: "Termina", danger: true }))
+                    call({ action: "end" });
+                }}
                 className="bg-destructive text-white font-black px-5 py-2 rounded-lg text-lg">
                 ■ END
               </button>
@@ -135,7 +140,10 @@ export function MatchEditor({ match }: { match: Match }) {
           {m.status === "FINISHED" && (
             <>
               <span className="chip">✓ Finita</span>
-              <button onClick={() => { if (confirm("Riaprire la partita?")) call({ action: "reset" }); }}
+              <button onClick={async () => {
+                  if (await confirmDialog({ title: "Riapri partita", message: "Riaprire la partita? Tornerà LIVE mantenendo gol, MVP e risultato.", confirmLabel: "Riapri" }))
+                    call({ action: "reset" });
+                }}
                 className="bg-white/10 text-white px-3 py-1 rounded-lg text-sm">
                 Riapri
               </button>
@@ -152,8 +160,8 @@ export function MatchEditor({ match }: { match: Match }) {
             <div className="grid grid-cols-2 gap-2">
               {[m.homeTeam, m.awayTeam].map((t) => (
                 <button key={t!.id}
-                  onClick={() => {
-                    if (confirm(`Segnare ${t!.name} come vincente senza risultato?`))
+                  onClick={async () => {
+                    if (await confirmDialog({ title: "Passaggio turno", message: `Segnare ${t!.name} come vincente senza risultato?`, confirmLabel: "Conferma" }))
                       call({ action: "advance", teamId: t!.id });
                   }}
                   className="rounded-lg px-3 py-2 font-bold text-sm bg-white/5 hover:bg-accent hover:text-brand-bg transition">

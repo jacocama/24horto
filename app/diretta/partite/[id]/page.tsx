@@ -72,8 +72,8 @@ export default async function MatchPage({ params }: { params: Promise<{ id: stri
         </div>
       )}
       <div className="flex gap-2 text-sm">
-        {m.homeTeam && <Link href={`/diretta/squadre/${m.homeTeam.id}`} className="chip">Rosa {m.homeTeam.name}</Link>}
-        {m.awayTeam && <Link href={`/diretta/squadre/${m.awayTeam.id}`} className="chip">Rosa {m.awayTeam.name}</Link>}
+        {m.homeTeam && <Link href={`/diretta/squadre/${m.homeTeam.id}`} className="chip hover:bg-white/20 active:bg-accent active:text-brand-bg active:scale-95 transition">Rosa {m.homeTeam.name}</Link>}
+        {m.awayTeam && <Link href={`/diretta/squadre/${m.awayTeam.id}`} className="chip hover:bg-white/20 active:bg-accent active:text-brand-bg active:scale-95 transition">Rosa {m.awayTeam.name}</Link>}
       </div>
     </div>
   );

@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
+import { useConfirm } from "@/components/confirm-dialog";
 
 type Team = { id: string; name: string };
 
@@ -15,6 +16,7 @@ export function R1DrawPanel({
 }) {
   const router = useRouter();
   const [pending, start] = useTransition();
+  const confirmDialog = useConfirm();
   const [pairs, setPairs] = useState<{ home: string; away: string }[]>(initialPairs);
   const [expanded, setExpanded] = useState(true);
 
@@ -44,8 +46,13 @@ export function R1DrawPanel({
     });
   };
 
-  const clearAll = () => {
-    if (!confirm("Cancellare tutti gli accoppiamenti?")) return;
+  const clearAll = async () => {
+    if (!(await confirmDialog({
+      title: "Cancella accoppiamenti",
+      message: "Cancellare tutti gli accoppiamenti del 1° turno?",
+      confirmLabel: "Cancella",
+      danger: true,
+    }))) return;
     start(async () => {
       const r = await fetch("/api/admin/draw-r1", {
         method: "DELETE",

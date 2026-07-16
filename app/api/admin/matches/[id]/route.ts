@@ -10,27 +10,25 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   const body = await req.json();
   const data: any = {};
 
+  const prev = await prisma.match.findUnique({ where: { id } });
+
   if (body.action === "start") {
     data.status = "LIVE";
     data.startedAt = new Date();
   } else if (body.action === "end") {
     data.status = "FINISHED";
   } else if (body.action === "reset") {
-    // Cancella anche gol e MVP per riportare la partita allo stato iniziale
-    await prisma.goal.deleteMany({ where: { matchId: id } });
-    data.status = "SCHEDULED";
-    data.startedAt = null;
-    data.penaltyWinnerId = null;
-    data.scoreUnknown = false;
-    data.homeScore = 0;
-    data.awayScore = 0;
-    data.mvpId = null;
+    // Riapri: torna solo a LIVE, mantiene gol/MVP/score/penalty.
+    // Un-propaga le squadre dai match successivi.
+    if (prev && prev.status === "FINISHED") {
+      await unpropagate(prev);
+    }
+    data.status = "LIVE";
   } else if (body.action === "setPenaltyWinner") {
     data.penaltyWinnerId = body.teamId || null;
   } else if (body.action === "setMvp") {
     data.mvpId = body.playerId || null;
   } else if (body.action === "advance") {
-    // Passaggio turno senza risultato: winner dichiarato manualmente
     data.status = "FINISHED";
     data.scoreUnknown = true;
     data.homeScore = 0;
@@ -43,12 +41,8 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
     if (typeof body.awayScore === "number") data.awayScore = body.awayScore;
   }
 
-  const prev = await prisma.match.findUnique({ where: { id } });
   const m = await prisma.match.update({ where: { id }, data });
 
-  // Propagate when:
-  // - match just finished AND not a draw, OR
-  // - penalty winner just set (draw resolved)
   const drawNow = m.homeScore === m.awayScore;
   const justFinished = prev && prev.status !== "FINISHED" && m.status === "FINISHED";
   const penaltyJustSet = body.action === "setPenaltyWinner" && m.status === "FINISHED";
@@ -60,32 +54,57 @@ export async function PATCH(req: Request, { params }: { params: Promise<{ id: st
   return NextResponse.json(m);
 }
 
+// Rimuove il team `id` da homeTeamId/awayTeamId del match target se presente
+async function clearTeamFrom(matchId: string, teamId: string) {
+  const target = await prisma.match.findUnique({ where: { id: matchId } });
+  if (!target) return;
+  const patch: any = {};
+  if (target.homeTeamId === teamId) patch.homeTeamId = null;
+  if (target.awayTeamId === teamId) patch.awayTeamId = null;
+  if (Object.keys(patch).length) {
+    await prisma.match.update({ where: { id: matchId }, data: patch });
+  }
+}
+
+function computeWinnerLoser(m: any): { winner: string | null; loser: string | null } {
+  if (!m.homeTeamId || !m.awayTeamId) return { winner: null, loser: null };
+  if (m.scoreUnknown || m.homeScore === m.awayScore) {
+    if (!m.penaltyWinnerId) return { winner: null, loser: null };
+    const winner = m.penaltyWinnerId;
+    const loser = winner === m.homeTeamId ? m.awayTeamId : m.homeTeamId;
+    return { winner, loser };
+  }
+  const winner = m.homeScore > m.awayScore ? m.homeTeamId : m.awayTeamId;
+  const loser = m.homeScore > m.awayScore ? m.awayTeamId : m.homeTeamId;
+  return { winner, loser };
+}
+
+async function unpropagate(m: any) {
+  const { winner, loser } = computeWinnerLoser(m);
+  if (m.winnerNext && winner) await clearTeamFrom(m.winnerNext, winner);
+  if (m.loserNext && loser) await clearTeamFrom(m.loserNext, loser);
+}
+
 async function propagate(matchId: string) {
   const m = await prisma.match.findUnique({ where: { id: matchId } });
   if (!m || !m.homeTeamId || !m.awayTeamId) return;
-  let winner: string;
-  let loser: string;
-  if (m.homeScore === m.awayScore) {
-    if (!m.penaltyWinnerId) return;
-    winner = m.penaltyWinnerId;
-    loser = winner === m.homeTeamId ? m.awayTeamId : m.homeTeamId;
-  } else {
-    winner = m.homeScore > m.awayScore ? m.homeTeamId : m.awayTeamId;
-    loser = m.homeScore > m.awayScore ? m.awayTeamId : m.homeTeamId;
-  }
+  const { winner, loser } = computeWinnerLoser(m);
+  if (!winner || !loser) return;
 
+  // WinnerNext: idempotente
   if (m.winnerNext) {
     const next = await prisma.match.findUnique({ where: { id: m.winnerNext } });
-    if (next) {
+    if (next && next.homeTeamId !== winner && next.awayTeamId !== winner) {
       await prisma.match.update({
         where: { id: next.id },
         data: next.homeTeamId ? { awayTeamId: winner } : { homeTeamId: winner },
       });
     }
   }
+  // LoserNext: idempotente
   if (m.loserNext) {
     const next = await prisma.match.findUnique({ where: { id: m.loserNext } });
-    if (next) {
+    if (next && next.homeTeamId !== loser && next.awayTeamId !== loser) {
       await prisma.match.update({
         where: { id: next.id },
         data: next.homeTeamId ? { awayTeamId: loser } : { homeTeamId: loser },

@@ -101,5 +101,9 @@ export function MatchCard({ m, href }: { m: MatchLike; href?: string }) {
       )}
     </div>
   );
-  return href ? <Link href={href} className="block">{content}</Link> : content;
+  return href ? (
+    <Link href={href} className="block active:scale-[0.98] active:brightness-110 transition">
+      {content}
+    </Link>
+  ) : content;
 }
