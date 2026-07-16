@@ -3,7 +3,7 @@
 import { useEffect, useState } from "react"
 
 // 18 luglio 2026, 09:00 ora italiana (CEST, UTC+2)
-const TARGET = new Date("2026-07-18T09:00:00+02:00").getTime()
+export const COUNTDOWN_TARGET = new Date("2026-07-18T09:00:00+02:00").getTime()
 
 type TimeLeft = {
   days: number
@@ -13,7 +13,7 @@ type TimeLeft = {
 }
 
 function getTimeLeft(): TimeLeft {
-  const diff = Math.max(0, TARGET - Date.now())
+  const diff = Math.max(0, COUNTDOWN_TARGET - Date.now())
   const totalSeconds = Math.floor(diff / 1000)
   return {
     days: Math.floor(totalSeconds / 86400),
@@ -39,20 +39,6 @@ export function Countdown() {
     const id = setInterval(() => setTimeLeft(getTimeLeft()), 1000)
     return () => clearInterval(id)
   }, [])
-
-  const isOver =
-    timeLeft.days === 0 &&
-    timeLeft.hours === 0 &&
-    timeLeft.minutes === 0 &&
-    timeLeft.seconds === 0
-
-  if (mounted && isOver) {
-    return (
-      <p className="font-display text-2xl uppercase tracking-wide text-primary sm:text-3xl">
-        Si gioca!
-      </p>
-    )
-  }
 
   return (
     <div
